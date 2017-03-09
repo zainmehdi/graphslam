@@ -34,8 +34,8 @@ common::Pose2DWithCovariance compose(common::Pose2DWithCovariance input_1, commo
   double dx = input_2.pose.x;
   double dy = input_2.pose.y;
   double dth = input_2.pose.theta;
-  output.pose.x = ( cos_th * dx ) + ( -sin_th * dy );
-  output.pose.y = ( sin_th * dx ) + ( cos_th *dy );
+  output.pose.x = input_1.pose.x + ( cos_th * dx  +  -sin_th * dy );
+  output.pose.y = input_1.pose.y + ( sin_th * dx  +   cos_th * dy );
   output.pose.theta = input_1.pose.theta + dth;
   output.pose.theta = std::fmod(output.pose.theta + M_PI, 2 * M_PI) - M_PI;
 
