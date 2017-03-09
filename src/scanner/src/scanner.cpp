@@ -49,7 +49,7 @@ common::Registration gicp(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCl
   double converged_fitness = gicp.getFitnessScore();
   Eigen::Matrix4f transform = gicp.getFinalTransformation();
   geometry_msgs::Pose2D transform_Delta = make_Delta(transform);
-  ROS_INFO("%f %f %f", transform_Delta.x, transform_Delta.y, transform_Delta.theta);
+  ROS_INFO("Delta: %f %f %f", transform_Delta.x, transform_Delta.y, transform_Delta.theta);
   std::cout << transform << std::endl;
   common::Registration output;
 
@@ -135,7 +135,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
 	//            ROS_INFO("GICP registration_closest FINISHED");
 
 	// compute factor things
-	ROS_INFO("factor_loop.id_1 = %d, factor_loop.id_2 = %d",
+//	ROS_INFO("factor_loop.id_1 = %d, factor_loop.id_2 = %d",
 		 keyframe_last_request.response.keyframe_last.id,
 		 keyframe_closest_request.response.keyframe_closest.id);
 	output.loop_closure_flag = true;

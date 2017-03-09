@@ -12,7 +12,7 @@ int keyframe_IDs; // Simple ID factory.
 // #### TUNING CONSTANTS START
 double sigma_xy_prior = 0.1; // TODO migrate to rosparams
 double sigma_th_prior = 0.1; // TODO migrate to rosparams
-int keyframes_to_skip_in_loop_closing = 10; // TODO migrate to rosparams
+int keyframes_to_skip_in_loop_closing = 1000; // TODO migrate to rosparams
 // #### TUNING CONSTANTS END
 
 void publish_keyframes() {
@@ -191,8 +191,8 @@ void registration_callback(const common::Registration& input) {
           loop_factor(input);
       }
 
-      ROS_INFO("%f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
       //      solve();
+      ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
       publish_keyframes();
   }
 
