@@ -41,6 +41,6 @@ catkin_package(
 
 include_directories(${catkin_INCLUDE_DIRS})
 
-add_executable(markers src/basic_shapes.cpp)
+add_executable(markers src/markers.cpp)
 target_link_libraries(markers ${catkin_LIBRARIES})
 add_dependencies(markers common_gencpp)
