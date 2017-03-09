@@ -4,7 +4,7 @@
 #include <common/Keyframes.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
-#include <costmap_2d/costmap_2d_ros.h>
+//#include <costmap_2d/costmap_2d_ros.h>
 
 common::Keyframes keyframes;
 ros::Publisher marker_pub;

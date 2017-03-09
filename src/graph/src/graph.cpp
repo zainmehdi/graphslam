@@ -58,7 +58,7 @@ void prior_factor(common::Registration input)
     initial.insert(input.keyframe_new.id, pose_prior);
 
     ROS_INFO("PRIOR FACTOR ID=%d CREATED. %lu KF, %lu Factor.", input.keyframe_new.id, keyframes.size(), graph.nrFactors());
-}
+} 
 
 void new_factor(common::Registration input)
 {
