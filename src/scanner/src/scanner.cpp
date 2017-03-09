@@ -88,14 +88,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
   // Case of first frame
   if(!keyframe_last_request_returned) {
     ROS_INFO("### NO LAST KEYFRAME FOUND ###");
-    //    sensor_msgs::LaserScan prior_scan = input;
-
-    //    if(keyframe_IDs == 0) {
-    //      for(int i = 0; i < prior_scan.ranges.size(); i++) {
-    //	prior_scan.ranges[i] += 0.5;
-    //      }
-    //    }
-
+   
     // Set flags, assign pointcloud, and publish
     output.first_frame_flag = true;
     output.keyframe_flag = false;
