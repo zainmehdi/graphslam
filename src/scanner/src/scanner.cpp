@@ -136,8 +136,8 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
 
 	// compute factor things
 //	ROS_INFO("factor_loop.id_1 = %d, factor_loop.id_2 = %d",
-		 keyframe_last_request.response.keyframe_last.id,
-		 keyframe_closest_request.response.keyframe_closest.id);
+//		 keyframe_last_request.response.keyframe_last.id,
+//		 keyframe_closest_request.response.keyframe_closest.id);
 	output.loop_closure_flag = true;
 	output.keyframe_last = keyframe_last_request.response.keyframe_last;
 	output.keyframe_loop = keyframe_closest_request.response.keyframe_closest;
