@@ -21,8 +21,8 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
   pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_2 = format_pointcloud(input_2);
 
   try {
-    gicp.setInputSource(pointcloud_1);
-    gicp.setInputTarget(pointcloud_2);
+	gicp.setInputTarget(pointcloud_1);
+    gicp.setInputSource(pointcloud_2);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_transform(new pcl::PointCloud<pcl::PointXYZ>);
     gicp.align(*pointcloud_transform, transform);
@@ -41,7 +41,7 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
 
   Eigen::MatrixXd covariance_Delta = compute_covariance(k_disp_disp, k_rot_disp, k_rot_rot, transform_Delta);
   common::Pose2DWithCovariance Delta = create_Pose2DWithCovariance_msg(transform_Delta, covariance_Delta);
-  ROS_INFO("x = %f; y = %f; theta = %f", Delta.pose.x, Delta.pose.y, Delta.pose.theta);
+  ROS_INFO("dx = %f; dy = %f; dth = %f", Delta.pose.x, Delta.pose.y, Delta.pose.theta);
   ROS_INFO("[%f %f %f %f %f %f %f %f %f]", Delta.covariance[0],
 	   Delta.covariance[1],
 	   Delta.covariance[2],
@@ -51,18 +51,18 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
 	   Delta.covariance[6],
 	   Delta.covariance[7],
 	   Delta.covariance[8]);
-  ROS_INFO("####GROUNG TRUTH#####");
-  ROS_INFO("x = %f; y = %f; theta = %f", robot_1_gt.pose.pose.position.x, robot_1_gt.pose.pose.position.y, tf::getYaw(robot_1_gt.pose.pose.orientation));
-  ROS_INFO("[%f %f %f %f %f %f %f %f %f]", robot_1_gt.pose.covariance[0],
-	   robot_1_gt.pose.covariance[1],
-	   robot_1_gt.pose.covariance[2],
-	   robot_1_gt.pose.covariance[3],
-	   robot_1_gt.pose.covariance[4],
-	   robot_1_gt.pose.covariance[5],
-	   robot_1_gt.pose.covariance[6],
-	   robot_1_gt.pose.covariance[7],
-	   robot_1_gt.pose.covariance[8]);
-  ROS_INFO("####GROUNG TRUTH#####");
+//  ROS_INFO("####GROUNG TRUTH#####");
+  ROS_INFO("x1 = %f; y1 = %f; th1 = %f", robot_1_gt.pose.pose.position.x, robot_1_gt.pose.pose.position.y, tf::getYaw(robot_1_gt.pose.pose.orientation));
+//  ROS_INFO("[%f %f %f %f %f %f %f %f %f]", robot_1_gt.pose.covariance[0],
+//	   robot_1_gt.pose.covariance[1],
+//	   robot_1_gt.pose.covariance[2],
+//	   robot_1_gt.pose.covariance[3],
+//	   robot_1_gt.pose.covariance[4],
+//	   robot_1_gt.pose.covariance[5],
+//	   robot_1_gt.pose.covariance[6],
+//	   robot_1_gt.pose.covariance[7],
+//	   robot_1_gt.pose.covariance[8]);
+//  ROS_INFO("####GROUNG TRUTH#####");
   double end = ros::Time::now().toSec();
   ROS_INFO("Time to Completion: %f seconds", end - start);
   ROS_INFO("#############################");
@@ -100,12 +100,12 @@ int main(int argc, char** argv) {
   delta_pub = n.advertise<common::Pose2DWithCovariance>("/scanner/delta", 1);
 
   // Setup GICP algorithm
-  gicp.setUseReciprocalCorrespondences(true);
+//  gicp.setUseReciprocalCorrespondences(true);
   //  gicp.setMaxCorrespondenceDistance(20.0);
   //  gicp.setEuclideanFitnessEpsilon();
   //  gicp.setCorrespondenceRandomness();
-  gicp.setMaximumIterations(500);
-  gicp.setMaximumOptimizerIterations(50);
+//  gicp.setMaximumIterations(500);
+//  gicp.setMaximumOptimizerIterations(50);
   //  gicp.setTransformationEpsilon(2e-3);
   //  gicp.setRotationEpsilon();
 
