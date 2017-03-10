@@ -18,7 +18,7 @@ void keyframes_callback(const common::Keyframes& input) {
     pose.position.y = input.keyframes[i].pose_opti.pose.y;
     pose.orientation = tf::createQuaternionMsgFromYaw(input.keyframes[i].pose_opti.pose.theta);
     pose_optis.poses.push_back(pose);
-  }  
+  }
 }
 
 int main( int argc, char** argv ) {
