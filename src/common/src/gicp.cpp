@@ -31,6 +31,7 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
 
   common::Registration output;
 
+  ROS_INFO("#############################");
   ROS_INFO("Converged?: %d, Fitness Score: %f", gicp.hasConverged(), gicp.getFitnessScore());
 
   transform = gicp.getFinalTransformation();
@@ -38,7 +39,6 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
 
   Eigen::MatrixXd covariance_Delta = compute_covariance(k_disp_disp, k_rot_disp, k_rot_rot, transform_Delta);
   common::Pose2DWithCovariance Delta = create_Pose2DWithCovariance_msg(transform_Delta, covariance_Delta);
-  ROS_INFO("#############################");
   ROS_INFO("x = %f; y = %f; theta = %f", Delta.pose.x, Delta.pose.y, Delta.pose.theta);
   ROS_INFO("[%f %f %f %f %f %f %f %f %f]", Delta.covariance[0],
 	   Delta.covariance[1],
