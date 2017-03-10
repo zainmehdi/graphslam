@@ -132,7 +132,7 @@ void solve() {
 }
 
 bool last_keyframe(common::LastKeyframe::Request &req, common::LastKeyframe::Response &res) {
-  ROS_INFO("LAST KEYFRAME SERVICE STARTED.");
+//  ROS_INFO("LAST KEYFRAME SERVICE STARTED.");
   if(!keyframes.empty()) {
     res.keyframe_last = keyframes.back();
     ROS_INFO("LAST KEYFRAME ID=%d SERVICE FINISHED.", keyframes.back().id);
@@ -144,7 +144,7 @@ bool last_keyframe(common::LastKeyframe::Request &req, common::LastKeyframe::Res
 }
 
 bool closest_keyframe(common::ClosestKeyframe::Request &req, common::ClosestKeyframe::Response &res) {
-  ROS_INFO("CLOSEST KEYFRAME SERVICE STARTED.");
+//  ROS_INFO("CLOSEST KEYFRAME SERVICE STARTED.");
   if(!keyframes.empty()) {
     std::vector<double> distances;
 
@@ -178,7 +178,11 @@ bool closest_keyframe(common::ClosestKeyframe::Request &req, common::ClosestKeyf
 }
 
 void registration_callback(const common::Registration& input) {
-  ROS_INFO("###REGISTRATION CALLBACK STARTED.###");
+    ROS_INFO("--------------------------------------------");
+//  ROS_INFO("###REGISTRATION CALLBACK STARTED.###");
+
+  if (!keyframes.empty())
+      ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
   
   if(input.first_frame_flag) {
       prior_factor(input);
@@ -192,11 +196,15 @@ void registration_callback(const common::Registration& input) {
       }
 
       //      solve();
-      ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
+//      ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
       publish_keyframes();
   }
 
-  ROS_INFO("###REGISTRATION CALLBACK FINISHED.###");
+  ROS_INFO("Laser Delta: %f %f %f", input.factor_new.delta.pose.x, input.factor_new.delta.pose.y, input.factor_new.delta.pose.theta);
+  if (!keyframes.empty())
+      ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
+
+//  ROS_INFO("###REGISTRATION CALLBACK FINISHED.###");
 }
 
 int main(int argc, char** argv) {

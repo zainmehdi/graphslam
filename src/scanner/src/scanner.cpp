@@ -49,24 +49,22 @@ common::Registration gicp(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCl
   double converged_fitness = gicp.getFitnessScore();
   Eigen::Matrix4f transform = gicp.getFinalTransformation();
   geometry_msgs::Pose2D transform_Delta = make_Delta(transform);
-  ROS_INFO("Delta: %f %f %f", transform_Delta.x, transform_Delta.y, transform_Delta.theta);
-  std::cout << transform << std::endl;
-  common::Registration output;
 
-  if(converged) {
-    if(converged_fitness > converged_fitness_threshold) {
- 
+  common::Registration output;
+  output.keyframe_flag = false;
+
+  if (converged)
+  {
       Eigen::MatrixXd covariance_Delta = compute_covariance(k_disp_disp, k_rot_disp, k_rot_rot, transform_Delta);
       common::Pose2DWithCovariance Delta = create_Pose2DWithCovariance_msg(transform_Delta, covariance_Delta);
-    
+
       output.factor_new.delta = Delta;
       output.factor_loop.delta = Delta;
-      output.keyframe_flag = true;
-    } else {
-      output.keyframe_flag = false;
-    }
-  } else {
-    output.keyframe_flag = false;
+
+      if (converged_fitness > converged_fitness_threshold)
+      {
+          output.keyframe_flag = true;
+      }
   }
 
   //  ROS_INFO("GICP FINISHED.");
@@ -130,14 +128,10 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
 	// get pointcloud and  register
 	sensor_msgs::PointCloud2 keyframe_closest_pointcloud =
 	  keyframe_closest_request.response.keyframe_closest.pointcloud;
-	//            ROS_INFO("GICP registration_closest STARTED");
+
 	common::Registration registration_closest = gicp(keyframe_closest_pointcloud, keyframe_last_pointcloud);
-	//            ROS_INFO("GICP registration_closest FINISHED");
 
 	// compute factor things
-//	ROS_INFO("factor_loop.id_1 = %d, factor_loop.id_2 = %d",
-//		 keyframe_last_request.response.keyframe_last.id,
-//		 keyframe_closest_request.response.keyframe_closest.id);
 	output.loop_closure_flag = true;
 	output.keyframe_last = keyframe_last_request.response.keyframe_last;
 	output.keyframe_loop = keyframe_closest_request.response.keyframe_closest;
