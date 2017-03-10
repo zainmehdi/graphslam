@@ -27,17 +27,35 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 
-common::Pose2DWithCovariance compose(common::Pose2DWithCovariance input_1, common::Pose2DWithCovariance input_2) {
+common::Pose2DWithCovariance compose(common::Pose2DWithCovariance pose, common::Pose2DWithCovariance delta) {
   common::Pose2DWithCovariance output;
-  double cos_th = cos( input_1.pose.theta );
-  double sin_th = sin( input_1.pose.theta );
+  double cos_th = cos( pose.pose.theta );
+  double sin_th = sin( pose.pose.theta );
 
   // Help: composition is:
-  //    pose_xy = pose1_xy + R(pose1.th) * pose2_xy; with R(th) = [cos(th) -sin(th); sin(th) cos(th)]
-  //    pose_th = pose1_th + pose2.th;
-  output.pose.x = input_1.pose.x + ( cos_th * input_2.pose.x  +  -sin_th * input_2.pose.y );
-  output.pose.y = input_1.pose.y + ( sin_th * input_2.pose.x  +   cos_th * input_2.pose.y );
-  output.pose.theta = input_1.pose.theta + input_2.pose.theta;
+  //    pose_xy = pose_xy + R(pose.th) * delta_xy; with R(th) = [cos(th) -sin(th); sin(th) cos(th)]
+  //    pose_th = pose_th + delta.th;
+  output.pose.x = pose.pose.x + ( cos_th * delta.pose.x  +  -sin_th * delta.pose.y );
+  output.pose.y = pose.pose.y + ( sin_th * delta.pose.x  +   cos_th * delta.pose.y );
+  output.pose.theta = pose.pose.theta + delta.pose.theta;
+  output.pose.theta = std::fmod(output.pose.theta + M_PI, 2 * M_PI) - M_PI;
+
+  return output;
+}
+
+common::Pose2DWithCovariance between(common::Pose2DWithCovariance pose_1, common::Pose2DWithCovariance pose_2) {
+  common::Pose2DWithCovariance output;
+  double cos_th = cos( pose_1.pose.theta );
+  double sin_th = sin( pose_1.pose.theta );
+
+  // Help: composition is:
+  //    delta_xy = R(pose1.th).transposed * (pose2_xy - pose1_xy); with R(th) = [cos(th) -sin(th); sin(th) cos(th)]
+  //    delta_th = pose2_th - pose1.th;
+  double dx = pose_2.pose.x - pose_1.pose.x;
+  double dy = pose_2.pose.y - pose_1.pose.y;
+  output.pose.x = (  cos_th * dx  + sin_th * dy );
+  output.pose.y = ( -sin_th * dx  + cos_th * dy );
+  output.pose.theta = pose_2.pose.theta - pose_1.pose.theta;
   output.pose.theta = std::fmod(output.pose.theta + M_PI, 2 * M_PI) - M_PI;
 
   return output;
