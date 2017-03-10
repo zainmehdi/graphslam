@@ -181,9 +181,6 @@ void registration_callback(const common::Registration& input) {
     ROS_INFO("--------------------------------------------");
 //  ROS_INFO("###REGISTRATION CALLBACK STARTED.###");
 
-  if (!keyframes.empty())
-      ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
-  
   if(input.first_frame_flag) {
       prior_factor(input);
   }
