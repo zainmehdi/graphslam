@@ -7,13 +7,15 @@ ros::ServiceClient keyframe_last_client;
 ros::ServiceClient keyframe_closest_client;
 
 // Tuning constants:
-const double converged_fitness_threshold = 0.05; // TODO migrate to rosparams
+const double converged_fitness_threshold = 0.5; // TODO migrate to rosparams
 double k_disp_disp = 0.1, k_rot_disp = 0.1, k_rot_rot = 0.1; // TODO migrate to rosparams
 
 // GICP algorithm
 pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
+Eigen::Matrix4f carry_transform;
 
-common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 input_2) {
+common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform) {
+
 
   // assign inputs
   pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = format_pointcloud(input_1);
@@ -23,7 +25,7 @@ common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs
 
   // align
   pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_transform(new pcl::PointCloud<pcl::PointXYZ>);
-  gicp.align(*pointcloud_transform);
+  gicp.align(*pointcloud_transform, transform);
 
   common::Registration output;
 
@@ -31,7 +33,7 @@ common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs
   if (gicp.hasConverged())
   {
       // Get transformation Delta and compute its covariance
-      Eigen::Matrix4f transform = gicp.getFinalTransformation();
+      transform = gicp.getFinalTransformation();
       geometry_msgs::Pose2D transform_Delta = make_Delta(transform);
 
       Eigen::MatrixXd covariance_Delta = compute_covariance(k_disp_disp, k_rot_disp, k_rot_rot, transform_Delta);
@@ -48,6 +50,11 @@ common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs
   }
 
   return output;
+}
+
+common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 input_2) {
+    Eigen::Matrix4f guess_null(Eigen::Matrix4f::Identity());
+    return gicp_register(input_1, input_2, guess_null);
 }
 
 void scanner_callback(const sensor_msgs::LaserScan& input) {
@@ -80,10 +87,10 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
     sensor_msgs::PointCloud2 input_pointcloud = scan_to_pointcloud(input);
     sensor_msgs::PointCloud2 keyframe_last_pointcloud = keyframe_last_request.response.keyframe_last.pointcloud;
     
-    common::Registration registration_last = gicp_register(input_pointcloud, keyframe_last_pointcloud);
+    common::Registration registration_last = gicp_register(input_pointcloud, keyframe_last_pointcloud, carry_transform);
+    std::cout << "scanner_callback::Transform: \n" << carry_transform << std::endl;
     
     output.keyframe_flag = registration_last.keyframe_flag;
-    output.loop_closure_flag = false;
     output.keyframe_new.ts = input.header.stamp;
     output.keyframe_new.pointcloud = input_pointcloud;
     output.keyframe_new.scan = input;
@@ -94,6 +101,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
 
     // Check for loop closures only if on Keyframes
     if (registration_last.keyframe_flag){
+        carry_transform.setIdentity();
           
       common::ClosestKeyframe keyframe_closest_request;
       keyframe_closest_request.request.keyframe_last = keyframe_last_request.response.keyframe_last;
@@ -104,7 +112,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
 	sensor_msgs::PointCloud2 keyframe_closest_pointcloud =
 	  keyframe_closest_request.response.keyframe_closest.pointcloud;
 
-	common::Registration registration_closest = gicp_register(keyframe_closest_pointcloud, keyframe_last_pointcloud);
+	common::Registration registration_closest = gicp_register(keyframe_closest_pointcloud, keyframe_last_pointcloud, carry_transform);
 
 	// compute factor things
 	output.loop_closure_flag = true;
@@ -138,7 +146,15 @@ int main(int argc, char** argv) {
 
   // Setup GICP algorithm
   gicp.setUseReciprocalCorrespondences(true);
-//  gicp.setMaxCorrespondenceDistance(20.0);
+  //  gicp.setMaxCorrespondenceDistance(20.0);
+  //  gicp.setEuclideanFitnessEpsilon();
+  //  gicp.setCorrespondenceRandomness();
+    gicp.setMaximumIterations(500);
+    gicp.setMaximumOptimizerIterations(50);
+  //  gicp.setTransformationEpsilon(2e-3);
+  //  gicp.setRotationEpsilon();
+
+  carry_transform.setIdentity();
 
   ros::spin();
   return 0;

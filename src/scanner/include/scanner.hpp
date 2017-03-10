@@ -56,7 +56,7 @@ geometry_msgs::Pose2D make_Delta(Eigen::MatrixXf T) {
   geometry_msgs::Pose2D Delta;
   Delta.x = T(0, 3);
   Delta.y = T(1, 3);
-  Delta.theta = atan( T(1, 0) / T(0, 0) );
+  Delta.theta = atan2( T(1, 0) , T(0, 0) );
   return Delta;
 }
 
