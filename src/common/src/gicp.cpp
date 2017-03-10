@@ -14,7 +14,7 @@ sensor_msgs::LaserScan robot_1_laserscan;
 void gicp_register(sensor_msgs::PointCloud2 input_1,
 				   sensor_msgs::PointCloud2 input_2,
 				   Eigen::Matrix4f& transform) {
-  
+  double start = ros::Time::now().toSec();
   pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = format_pointcloud(input_1);
   pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_2 = format_pointcloud(input_2);
 
@@ -38,7 +38,7 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
 
   Eigen::MatrixXd covariance_Delta = compute_covariance(k_disp_disp, k_rot_disp, k_rot_rot, transform_Delta);
   common::Pose2DWithCovariance Delta = create_Pose2DWithCovariance_msg(transform_Delta, covariance_Delta);
-
+  ROS_INFO("#############################");
   ROS_INFO("x = %f; y = %f; theta = %f", Delta.pose.x, Delta.pose.y, Delta.pose.theta);
   ROS_INFO("[%f %f %f %f %f %f %f %f %f]", Delta.covariance[0],
 	   Delta.covariance[1],
@@ -49,7 +49,9 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
 	   Delta.covariance[6],
 	   Delta.covariance[7],
 	   Delta.covariance[8]);
-  
+  double end = ros::Time::now().toSec();
+  ROS_INFO("Time to Completion: %f seconds", end - start);
+  ROS_INFO("#############################");
   delta_pub.publish(Delta);
 }
 
@@ -71,7 +73,7 @@ void robot_1_scanner_callback(const sensor_msgs::LaserScan& input) {
 int main(int argc, char** argv) {
   ros::init(argc, argv, "scanner");
   ros::NodeHandle n;
-  ros::Rate r(1);
+  ros::Rate r(100);
 
   ros::Subscriber robot_0_scan_sub = n.subscribe("/robot_0/base_scan", 1, robot_0_scanner_callback);
   ros::Subscriber robot_1_scan_sub = n.subscribe("/robot_1/base_scan", 1, robot_1_scanner_callback);
