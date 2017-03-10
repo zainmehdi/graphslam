@@ -7,20 +7,17 @@ ros::ServiceClient keyframe_last_client;
 ros::ServiceClient keyframe_closest_client;
 
 // Tuning constants:
-const double converged_fitness_threshold = 0.3; // TODO migrate to rosparams
+const double converged_fitness_threshold = 0.05; // TODO migrate to rosparams
 double k_disp_disp = 0.1, k_rot_disp = 0.1, k_rot_rot = 0.1; // TODO migrate to rosparams
 
-    // init GICP algorithm
-    pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
+// GICP algorithm
+pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
 
 common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 input_2) {
-//  ROS_INFO("GICP STARTED.");
-
-
 
   // assign inputs
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = format_pointcloud(input_1);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_2 = format_pointcloud(input_2);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = format_pointcloud(input_1);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_2 = format_pointcloud(input_2);
   gicp.setInputSource(pointcloud_1);
   gicp.setInputTarget(pointcloud_2);
 
@@ -140,9 +137,8 @@ int main(int argc, char** argv) {
   keyframe_closest_client = n.serviceClient<common::ClosestKeyframe>("/graph/closest_keyframe");
 
   // Setup GICP algorithm
-  ROS_INFO("gicp.getUseReciprocalCorrespondences() = %d", gicp.getUseReciprocalCorrespondences());
   gicp.setUseReciprocalCorrespondences(true);
-  ROS_INFO("gicp.getUseReciprocalCorrespondences() = %d", gicp.getUseReciprocalCorrespondences());
+//  gicp.setMaxCorrespondenceDistance(20.0);
 
   ros::spin();
   return 0;
