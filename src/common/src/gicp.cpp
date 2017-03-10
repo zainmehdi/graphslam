@@ -1,4 +1,5 @@
 #include <scanner.hpp>
+#include <nav_msgs/Odometry.h>
 
 ros::Publisher delta_pub;
 
@@ -10,6 +11,7 @@ Eigen::Matrix4f carry_transform;
 
 sensor_msgs::LaserScan robot_0_laserscan;
 sensor_msgs::LaserScan robot_1_laserscan;
+nav_msgs::Odometry robot_1_gt;
 
 void gicp_register(sensor_msgs::PointCloud2 input_1,
 				   sensor_msgs::PointCloud2 input_2,
@@ -49,6 +51,18 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
 	   Delta.covariance[6],
 	   Delta.covariance[7],
 	   Delta.covariance[8]);
+  ROS_INFO("####GROUNG TRUTH#####");
+  ROS_INFO("x = %f; y = %f; theta = %f", robot_1_gt.pose.pose.position.x, robot_1_gt.pose.pose.position.y, tf::getYaw(robot_1_gt.pose.pose.orientation));
+  ROS_INFO("[%f %f %f %f %f %f %f %f %f]", robot_1_gt.pose.covariance[0],
+	   robot_1_gt.pose.covariance[1],
+	   robot_1_gt.pose.covariance[2],
+	   robot_1_gt.pose.covariance[3],
+	   robot_1_gt.pose.covariance[4],
+	   robot_1_gt.pose.covariance[5],
+	   robot_1_gt.pose.covariance[6],
+	   robot_1_gt.pose.covariance[7],
+	   robot_1_gt.pose.covariance[8]);
+  ROS_INFO("####GROUNG TRUTH#####");
   double end = ros::Time::now().toSec();
   ROS_INFO("Time to Completion: %f seconds", end - start);
   ROS_INFO("#############################");
@@ -70,6 +84,11 @@ void robot_1_scanner_callback(const sensor_msgs::LaserScan& input) {
   ROS_INFO("robot_1_laserscan received.");
 }
 
+void robot_1_gt_callback(const nav_msgs::Odometry& input) {
+  robot_1_gt = input;
+  ROS_INFO("robot_1_gt received.");
+}
+
 int main(int argc, char** argv) {
   ros::init(argc, argv, "scanner");
   ros::NodeHandle n;
@@ -77,6 +96,7 @@ int main(int argc, char** argv) {
 
   ros::Subscriber robot_0_scan_sub = n.subscribe("/robot_0/base_scan", 1, robot_0_scanner_callback);
   ros::Subscriber robot_1_scan_sub = n.subscribe("/robot_1/base_scan", 1, robot_1_scanner_callback);
+  ros::Subscriber ground_truth_sub = n.subscribe("/robot_1/base_pose_ground_truth", 1, robot_1_gt_callback);
   delta_pub = n.advertise<common::Pose2DWithCovariance>("/scanner/delta", 1);
 
   // Setup GICP algorithm

@@ -3,6 +3,7 @@ project(common)
 
 find_package(catkin REQUIRED COMPONENTS
   tf
+  nav_msgs
   pcl_ros
   pcl_conversions
   laser_geometry
