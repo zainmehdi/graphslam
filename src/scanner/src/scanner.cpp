@@ -11,7 +11,8 @@ const double converged_fitness_threshold = 0.01; // TODO migrate to rosparams
 double k_disp_disp = 0.1, k_rot_disp = 0.1, k_rot_rot = 0.1; // TODO migrate to rosparams
 
 // GICP algorithm
-pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
+//pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
+pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
 Eigen::Matrix4f carry_transform;
 
 common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform) {
@@ -86,8 +87,14 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
   if(keyframe_last_request_returned) {
     sensor_msgs::PointCloud2 input_pointcloud = scan_to_pointcloud(input);
     sensor_msgs::PointCloud2 keyframe_last_pointcloud = keyframe_last_request.response.keyframe_last.pointcloud;
-    
+
+    double start = ros::Time::now().toSec();
+
     common::Registration registration_last = gicp_register(input_pointcloud, keyframe_last_pointcloud, carry_transform);
+
+    double end = ros::Time::now().toSec();
+    ROS_INFO("align time: %f", end - start);
+
 //    std::cout << "scanner_callback::Transform: \n" << carry_transform << std::endl;
     
     output.keyframe_flag = registration_last.keyframe_flag;
@@ -144,15 +151,17 @@ int main(int argc, char** argv) {
   keyframe_last_client = n.serviceClient<common::LastKeyframe>("/graph/last_keyframe");
   keyframe_closest_client = n.serviceClient<common::ClosestKeyframe>("/graph/closest_keyframe");
 
-  // Setup GICP algorithm
+  // Setup ICP algorithm
   gicp.setUseReciprocalCorrespondences(true);
   //  gicp.setMaxCorrespondenceDistance(20.0);
   //  gicp.setEuclideanFitnessEpsilon();
   //  gicp.setCorrespondenceRandomness();
     gicp.setMaximumIterations(500);
-    gicp.setMaximumOptimizerIterations(50);
   //  gicp.setTransformationEpsilon(2e-3);
   //  gicp.setRotationEpsilon();
+
+    // Setup GICP algorithm
+    //    gicp.setMaximumOptimizerIterations(50);
 
   carry_transform.setIdentity();
 
