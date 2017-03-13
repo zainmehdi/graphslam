@@ -7,7 +7,7 @@ ros::ServiceClient keyframe_last_client;
 ros::ServiceClient keyframe_closest_client;
 
 // Tuning constants:
-const double converged_fitness_threshold = 0.5; // TODO migrate to rosparams
+const double converged_fitness_threshold = 0.01; // TODO migrate to rosparams
 double k_disp_disp = 0.1, k_rot_disp = 0.1, k_rot_rot = 0.1; // TODO migrate to rosparams
 
 // GICP algorithm
@@ -88,7 +88,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
     sensor_msgs::PointCloud2 keyframe_last_pointcloud = keyframe_last_request.response.keyframe_last.pointcloud;
     
     common::Registration registration_last = gicp_register(input_pointcloud, keyframe_last_pointcloud, carry_transform);
-    std::cout << "scanner_callback::Transform: \n" << carry_transform << std::endl;
+//    std::cout << "scanner_callback::Transform: \n" << carry_transform << std::endl;
     
     output.keyframe_flag = registration_last.keyframe_flag;
     output.keyframe_new.ts = input.header.stamp;
