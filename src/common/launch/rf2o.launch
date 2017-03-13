@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- <node pkg="stage_ros" type="stageros" name="stageros" args="$(find common)/world/willow.world"/> -->
+  <node pkg="stage_ros" type="stageros" name="stageros" args="$(find common)/world/byhand_multi.world"/>
+  <include file="$(find rf2o_laser_odometry)/launch/rf2o_laser_odometry.launch"/>
+  <node pkg="common" type="rf2oicp" name="rf2oicp" output="screen"/>
+</launch>

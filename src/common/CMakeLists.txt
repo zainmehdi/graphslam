@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(common)
 
+add_definitions(-std=c++11)
+
 find_package(catkin REQUIRED COMPONENTS
   tf
   nav_msgs
@@ -18,6 +20,10 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(
   Eigen3 REQUIRED
+  )
+
+find_package(
+  VTK5 REQUIRED
   )
 
 add_message_files(
@@ -61,5 +67,13 @@ add_dependencies(markers common_gencpp)
 add_executable(gicp src/gicp.cpp)
 target_link_libraries(gicp ${catkin_LIBRARIES})
 add_dependencies(gicp common_gencpp)
+
+add_executable(sparseicp src/sparseicp.cpp)
+target_link_libraries(sparseicp ${catkin_LIBRARIES})
+add_dependencies(sparseicp common_gencpp)
+
+add_executable(rf2oicp src/rf2oicp.cpp)
+target_link_libraries(rf2oicp ${catkin_LIBRARIES})
+add_dependencies(rf2oicp commoxn_gencpp)
 
 

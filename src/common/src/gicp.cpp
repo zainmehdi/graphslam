@@ -84,7 +84,7 @@ void robot_1_gt_callback(const nav_msgs::Odometry& input) {
 }
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "scanner");
+  ros::init(argc, argv, "gicp");
   ros::NodeHandle n;
   ros::Rate r(100);
 
