@@ -7,15 +7,30 @@ ros::ServiceClient keyframe_last_client;
 ros::ServiceClient keyframe_closest_client;
 
 // Tuning constants:
-const double converged_fitness_threshold = 0.01; // TODO migrate to rosparams
+const double converged_fitness_threshold = 999; // TODO migrate to rosparams
+const double distance_threshold = 1;
+const double rotation_threshold = 1;
 double k_disp_disp = 0.1, k_rot_disp = 0.1, k_rot_rot = 0.1; // TODO migrate to rosparams
 
 // GICP algorithm
 //pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
 pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
-Eigen::Matrix4f carry_transform;
+Eigen::Matrix4f carry_transform; // The transform of the last align which is passed to the next align as initial guess
 
-common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform) {
+bool vote_for_keyframe(const common::Pose2DWithCovariance Delta, const double fitness)
+{
+    if (fitness > converged_fitness_threshold) // fitness
+        return true;
+    if (fabs(Delta.pose.theta) > rotation_threshold) // rotation
+        return true;
+    if ((Delta.pose.x*Delta.pose.x+Delta.pose.y*Delta.pose.y) > distance_threshold*distance_threshold) // translation
+        return true;
+
+    return false;
+}
+
+
+common::Registration gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform) {
 
 
   // assign inputs
@@ -27,6 +42,7 @@ common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs
   // align
   pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_transform(new pcl::PointCloud<pcl::PointXYZ>);
   gicp.align(*pointcloud_transform, transform);
+//  ROS_INFO("Convergence state %d", gicp.getConvergeCriteria()->getConvergenceState());
 
   common::Registration output;
 
@@ -44,7 +60,8 @@ common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs
       output.factor_new.delta  = Delta;
       output.factor_loop.delta = Delta;
 
-      if (gicp.getFitnessScore() > converged_fitness_threshold)
+      if (vote_for_keyframe(Delta, gicp.getFitnessScore()))
+//      if (gicp.getFitnessScore() > converged_fitness_threshold)
       {
           output.keyframe_flag = true;
       }
@@ -93,7 +110,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input) {
     common::Registration registration_last = gicp_register(input_pointcloud, keyframe_last_pointcloud, carry_transform);
 
     double end = ros::Time::now().toSec();
-    ROS_INFO("align time: %f", end - start);
+//    ROS_INFO("align time: %f", end - start);
 
 //    std::cout << "scanner_callback::Transform: \n" << carry_transform << std::endl;
     
@@ -153,15 +170,15 @@ int main(int argc, char** argv) {
 
   // Setup ICP algorithm
   gicp.setUseReciprocalCorrespondences(true);
-  //  gicp.setMaxCorrespondenceDistance(20.0);
-  //  gicp.setEuclideanFitnessEpsilon();
   //  gicp.setCorrespondenceRandomness();
-    gicp.setMaximumIterations(500);
-  //  gicp.setTransformationEpsilon(2e-3);
   //  gicp.setRotationEpsilon();
+  gicp.setMaximumIterations(50); // ICP example 50
+  gicp.setMaxCorrespondenceDistance(1); // ICP example 0.05
+  gicp.setTransformationEpsilon(1e-8); // ICP example 1e-8
+  gicp.setEuclideanFitnessEpsilon(0.1); // ICP example 1
 
-    // Setup GICP algorithm
-    //    gicp.setMaximumOptimizerIterations(50);
+  // Setup GICP algorithm
+  //    gicp.setMaximumOptimizerIterations(50);
 
   carry_transform.setIdentity();
 

@@ -45,7 +45,7 @@ common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y,
 //    -  It should be placed in package 'common'
 //    -  and also renamed to 'between(pose1, pose2)'
 //    -  see the document in Drive !!
-common::Pose2DWithCovariance pose_transform(common::Pose2DWithCovariance start_pose,
+common::Pose2DWithCovariance between(common::Pose2DWithCovariance start_pose,
 					    common::Pose2DWithCovariance end_pose) {
   common::Pose2DWithCovariance transform;
   double t_start_th = start_pose.pose.theta;
@@ -108,7 +108,7 @@ bool odometry_buffer_request(common::OdometryBuffer::Request &req, common::Odome
   if(t_start_found && t_end_found) {
     common::Pose2DWithCovariance t_start_pose = odometry_buffer_frozen[t_start_buffer_position].pose;
     common::Pose2DWithCovariance t_end_pose = odometry_buffer_frozen[t_end_buffer_position].pose;
-    res.delta = pose_transform(t_start_pose, t_end_pose); // JS: we want one pose returned, not the pose increment
+    res.delta = between(t_start_pose, t_end_pose); // JS: we want one pose returned, not the pose increment
     return true;
   }
 
