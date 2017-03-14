@@ -57,7 +57,7 @@ void prior_factor(common::Registration input)
     graph.add(gtsam::PriorFactor<gtsam::Pose2>(input.keyframe_new.id, pose_prior, noise_prior));
     initial.insert(input.keyframe_new.id, pose_prior);
 
-    ROS_INFO("PRIOR FACTOR ID=%d CREATED. %lu KF, %lu Factor.", input.keyframe_new.id, keyframes.size(), graph.nrFactors());
+    ROS_INFO("PRIOR FACTOR ID=%d CREATED. %lu KF, %lu Factor, 0 loops", input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 } 
 
 void new_factor(common::Registration input)
@@ -91,7 +91,7 @@ void new_factor(common::Registration input)
                                                               input.factor_new.delta.pose.theta),
                                                  noise_delta));
 
-    ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors());
+    ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors, %lu loops", input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors(), graph.nrFactors() - keyframes.size());
 }
 
 void loop_factor(common::Registration input)
@@ -109,7 +109,7 @@ void loop_factor(common::Registration input)
                                                               input.factor_loop.delta.pose.y,
                                                               input.factor_loop.delta.pose.theta),
                                                  noise_delta));
-    ROS_INFO("LOOP FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors());
+    ROS_INFO("LOOP FACTOR %d-->%d CREATED. %lu KFs, %lu Factors, %lu loops", input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors(), graph.nrFactors() - keyframes.size());
 }
 
 void solve() {
@@ -195,7 +195,7 @@ void registration_callback(const common::Registration& input) {
           loop_factor(input);
       }
 
-      //      solve();
+      solve();
       publish_keyframes();
       ROS_INFO("Laser Delta: %f %f %f", input.factor_new.delta.pose.x, input.factor_new.delta.pose.y, input.factor_new.delta.pose.theta);
       if (!keyframes.empty())
