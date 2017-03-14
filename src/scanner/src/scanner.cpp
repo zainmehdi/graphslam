@@ -13,10 +13,10 @@ const double rotation_threshold = 1; // TODO migrate to rosparams
 const unsigned int loop_closure_skip = 4;
 
 // Uncertainty model constants
-double k_disp_disp = 0.1, k_rot_disp = 0.1, k_rot_rot = 0.1; // TODO migrate to rosparams
+const double k_disp_disp = 0.01, k_rot_disp = 0.02, k_rot_rot = 0.03; // TODO migrate to rosparams
 
 // GICP algorithm
-// registration output
+// alignement output
 struct Alignement{
         bool converged;
         float fitness;
@@ -27,8 +27,11 @@ struct Alignement{
 
 //pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
 pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
+
 Eigen::Matrix4f carry_transform; // The transform of the last align which is passed to the next align as initial guess
 unsigned int loop_closure_skip_count;
+
+// Helper functions
 
 bool vote_for_keyframe(const common::Pose2DWithCovariance Delta, const double fitness)
 {
@@ -42,7 +45,7 @@ bool vote_for_keyframe(const common::Pose2DWithCovariance Delta, const double fi
     return false;
 }
 
-Alignement gicp_register2(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform){
+Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform){
 
     // assign inputs
     pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = format_pointcloud(input_1);
@@ -74,55 +77,59 @@ Alignement gicp_register2(const sensor_msgs::PointCloud2 input_1, const sensor_m
 
     return output;
 }
-Alignement gicp_register2(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2){
-    Eigen::Matrix4f guess_null(Eigen::Matrix4f::Identity());
-    return gicp_register2(input_1, input_2, guess_null);
-}
-
-common::Registration gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform) {
-
-
-  // assign inputs
-  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = format_pointcloud(input_1);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_2 = format_pointcloud(input_2);
-  gicp.setInputSource(pointcloud_1);
-  gicp.setInputTarget(pointcloud_2);
-
-  // align
-  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_transform(new pcl::PointCloud<pcl::PointXYZ>);
-  gicp.align(*pointcloud_transform, transform);
-  ROS_INFO("Convergence state %d", gicp.getConvergeCriteria()->getConvergenceState());
-
-  common::Registration output;
-
-  output.keyframe_flag = false;
-  if (gicp.hasConverged())
-  {
-      // Get transformation Delta and compute its covariance
-      transform = gicp.getFinalTransformation();
-      geometry_msgs::Pose2D transform_Delta = make_Delta(transform);
-
-      Eigen::MatrixXd covariance_Delta = compute_covariance(k_disp_disp, k_rot_disp, k_rot_rot, transform_Delta);
-      common::Pose2DWithCovariance Delta = create_Pose2DWithCovariance_msg(transform_Delta, covariance_Delta);
-
-      // Assign to outputs
-      output.factor_new.delta  = Delta;
-      output.factor_loop.delta = Delta;
-
-      if (vote_for_keyframe(Delta, gicp.getFitnessScore()))
-//      if (gicp.getFitnessScore() > converged_fitness_threshold)
-      {
-          output.keyframe_flag = true;
-      }
-  }
-
-  return output;
-}
-
-common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 input_2) {
+Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2){
     Eigen::Matrix4f guess_null(Eigen::Matrix4f::Identity());
     return gicp_register(input_1, input_2, guess_null);
 }
+
+// JS: Obsolete code:
+//common::Registration gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform) {
+//
+//
+//  // assign inputs
+//  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = format_pointcloud(input_1);
+//  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_2 = format_pointcloud(input_2);
+//  gicp.setInputSource(pointcloud_1);
+//  gicp.setInputTarget(pointcloud_2);
+//
+//  // align
+//  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_transform(new pcl::PointCloud<pcl::PointXYZ>);
+//  gicp.align(*pointcloud_transform, transform);
+//  ROS_INFO("Convergence state %d", gicp.getConvergeCriteria()->getConvergenceState());
+//
+//  common::Registration output;
+//
+//  output.keyframe_flag = false;
+//  if (gicp.hasConverged())
+//  {
+//      // Get transformation Delta and compute its covariance
+//      transform = gicp.getFinalTransformation();
+//      geometry_msgs::Pose2D transform_Delta = make_Delta(transform);
+//
+//      Eigen::MatrixXd covariance_Delta = compute_covariance(k_disp_disp, k_rot_disp, k_rot_rot, transform_Delta);
+//      common::Pose2DWithCovariance Delta = create_Pose2DWithCovariance_msg(transform_Delta, covariance_Delta);
+//
+//      // Assign to outputs
+//      output.factor_new.delta  = Delta;
+//      output.factor_loop.delta = Delta;
+//
+//      if (vote_for_keyframe(Delta, gicp.getFitnessScore()))
+//      {
+//          output.keyframe_flag = true;
+//      }
+//  }
+//
+//  return output;
+//}
+//
+//common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 input_2) {
+//    Eigen::Matrix4f guess_null(Eigen::Matrix4f::Identity());
+//    return gicp_register(input_1, input_2, guess_null);
+//}
+
+
+
+// Node functions
 
 void scanner_callback(const sensor_msgs::LaserScan& input)
 {
@@ -159,8 +166,8 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
 
         double start = ros::Time::now().toSec();
 
-        //    common::Registration registration_last = gicp_register(input_pointcloud, keyframe_last_pointcloud, carry_transform);
-        Alignement alignement_last = gicp_register2(input_pointcloud, keyframe_last_pointcloud, carry_transform);
+        gicp.setMaxCorrespondenceDistance(1); // 1m for close range
+        Alignement alignement_last = gicp_register(input_pointcloud, keyframe_last_pointcloud, carry_transform);
 
 
         double end = ros::Time::now().toSec();
@@ -183,9 +190,9 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
             carry_transform.setIdentity();
 
             loop_closure_skip_count++;
-            if (loop_closure_skip_count >= loop_closure_skip)
+            if ((loop_closure_skip_count % loop_closure_skip) == 0) // only try once in a while
             {
-                loop_closure_skip_count = 0;
+//                loop_closure_skip_count = 0;
 
                 common::ClosestKeyframe keyframe_closest_request;
                 keyframe_closest_request.request.keyframe_last = keyframe_last_request.response.keyframe_last;
@@ -193,20 +200,24 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
 
                 if (keyframe_closest_request_returned)
                 {
+                    // compute prior transform from 2 keyframes
+                    Eigen::Matrix4f T_last = make_transform(keyframe_last_request.response.keyframe_last.pose_opti.pose);
+                    Eigen::Matrix4f T_loop = make_transform(keyframe_closest_request.response.keyframe_closest.pose_opti.pose);
+                    Eigen::Matrix4f loop_transform = T_last.inverse()*T_loop;
+
                     // get pointcloud and  register
                     sensor_msgs::PointCloud2 keyframe_closest_pointcloud =
                             keyframe_closest_request.response.keyframe_closest.pointcloud;
 
-                    //                common::Registration registration_closest = gicp_register(keyframe_closest_pointcloud,
-                    //                                                                          keyframe_last_pointcloud, carry_transform);
-
-                    Eigen::Matrix4f loop_transform;
-                    loop_transform.setIdentity();
-                    Alignement alignement_loop = gicp_register2(keyframe_closest_pointcloud, keyframe_last_pointcloud,
+                    gicp.setMaxCorrespondenceDistance(5); // 5m for loop closure
+                    Alignement alignement_loop = gicp_register(keyframe_closest_pointcloud, keyframe_last_pointcloud,
                                                                 loop_transform);
 
                     // compute factor things
                     output.loop_closure_flag = alignement_loop.converged;
+                    ROS_INFO("LC: convergence state: %d", alignement_loop.convergence_state);
+                    ROS_INFO("LC: Delta: %f %f %f", alignement_loop.Delta.pose.x, alignement_loop.Delta.pose.y, alignement_loop.Delta.pose.theta);
+
                     if (alignement_loop.converged)
                     {
                         output.keyframe_last = keyframe_last_request.response.keyframe_last;

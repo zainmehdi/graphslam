@@ -83,7 +83,7 @@ Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_
   
   double Dl = sqrt( pow( input.x, 2 ) + pow( input.y, 2) );
   double sigma_xy_squared = k_disp_disp * Dl;
-  double sigma_th_squared = ( k_rot_disp * Dl ) + ( k_rot_rot * input.theta );
+  double sigma_th_squared = ( k_rot_disp * Dl ) + ( k_rot_rot * fabs(input.theta) );
   
   Eigen::MatrixXd Q(3, 3);
   Q(0, 0) = sigma_xy_squared;
