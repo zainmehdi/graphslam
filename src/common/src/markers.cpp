@@ -12,6 +12,9 @@ visualization_msgs::Marker points, line_strip, line_list;
 
 void graph_callback(const common::Graph& input) {
   pose_optis.poses.clear();
+  points.points.clear();
+  line_strip.points.clear();
+  line_list.points.clear();
   
   for(int i = 0; i < input.keyframes.size(); i++) {
     geometry_msgs::Pose pose;
@@ -23,26 +26,41 @@ void graph_callback(const common::Graph& input) {
 
   for(int i = 0; i < input.edges.size(); i++) {
     geometry_msgs::Pose2D id_1_pose, id_2_pose;
+    bool p_1_found = false;
+    bool p_2_found = false;
+
+    ROS_INFO("%d %d", input.edges[i].id_1, input.edges[i].id_1);
+    
     for(int j = 0; j < input.keyframes.size(); j++) {
       if(input.keyframes[j].id == input.edges[i].id_1) {
 	id_1_pose = input.keyframes[i].pose_opti.pose;
-      }
-      if(input.keyframes[j].id == input.edges[i].id_2) {
-	id_2_pose = input.keyframes[i].pose_opti.pose;
+	ROS_INFO("p_1 %f %f", id_1_pose.x, id_1_pose.y);
+	p_1_found = true;
       }
     }
-    geometry_msgs::Point p_1;
-    p_1.x = id_1_pose.x;
-    p_1.y = id_1_pose.y;
-    points.points.push_back(p_1);
-    line_strip.points.push_back(p_1);
-    geometry_msgs::Point p_2;
-    p_2.x = id_2_pose.x;
-    p_2.y = id_2_pose.y;
-    points.points.push_back(p_2);
-    line_strip.points.push_back(p_2);
-    line_list.points.push_back(p_1);
-    line_list.points.push_back(p_2);
+
+    for(int j = 0; j < input.keyframes.size(); j++) {
+      if(input.keyframes[j].id == input.edges[i].id_2) {
+	id_2_pose = input.keyframes[i].pose_opti.pose;
+	ROS_INFO("p_2 %f %f", id_2_pose.x, id_2_pose.y);
+	p_2_found = true;
+      }
+    }
+
+    if(p_1_found && p_2_found) {
+      geometry_msgs::Point p_1;
+      p_1.x = id_1_pose.x;
+      p_1.y = id_1_pose.y;
+      points.points.push_back(p_1);
+      line_strip.points.push_back(p_1);
+
+      geometry_msgs::Point p_2;
+      p_2.x = id_2_pose.x;
+      p_2.y = id_2_pose.y;
+      points.points.push_back(p_2);
+      line_strip.points.push_back(p_2);
+      line_list.points.push_back(p_2);
+    }
   }
 }
 
