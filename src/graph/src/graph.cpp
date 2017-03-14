@@ -1,12 +1,14 @@
 #include <graph.hpp>
-//#include <scanner/scanner.hpp>
 #include <common/Keyframes.h>
+#include <common/Graph.h>
 
 ros::Publisher keyframes_pub;
+ros::Publisher graph_pub;
 gtsam::NonlinearFactorGraph graph;
 gtsam::Values initial;
 common::Pose2DWithCovariance pose_opt;
 std::vector<common::Keyframe> keyframes; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
+std::vector<common::Edge> edges; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
 int keyframe_IDs; // Simple ID factory.
 
 // #### TUNING CONSTANTS START
@@ -15,13 +17,17 @@ double sigma_th_prior = 0.1; // TODO migrate to rosparams
 int keyframes_to_skip_in_loop_closing = 1000; // TODO migrate to rosparams
 // #### TUNING CONSTANTS END
 
-void publish_keyframes() {
-  common::Keyframes output;
+void publish_graph() {
+  common::Graph output;
   for(int i = 0; i < keyframes.size(); i++) {
     output.keyframes.push_back(keyframes[i]);
   }
 
-  keyframes_pub.publish(output);
+  for(int i = 0; i < edges.size(); i++) {
+    output.edges.push_back(edges[i]);
+  }
+
+  graph_pub.publish(output);
 }
 
 void prior_factor(common::Registration input)
@@ -90,7 +96,10 @@ void new_factor(common::Registration input)
                                                               input.factor_new.delta.pose.y,
                                                               input.factor_new.delta.pose.theta),
                                                  noise_delta));
-
+    common::Edge edge;
+    edge.id_1 = input.factor_new.id_1;
+    edge.id_2 = input.factor_new.id_2;
+    edges.push_back(edge);
     ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 }
 
@@ -109,6 +118,10 @@ void loop_factor(common::Registration input)
                                                               input.factor_loop.delta.pose.y,
                                                               input.factor_loop.delta.pose.theta),
                                                  noise_delta));
+    common::Edge edge;
+    edge.id_1 = input.factor_loop.id_1;
+    edge.id_2 = input.factor_loop.id_2;
+    edges.push_back(edge);
     ROS_INFO("LOOP FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors());
 }
 
@@ -118,6 +131,7 @@ void solve() {
   //initial.print();
   gtsam::Values poses_opti = gtsam::LevenbergMarquardtOptimizer(graph, initial).optimize();
 //  gtsam::Marginals marginals(graph, poses_opti);
+  poses_opti.print();
 
   for(int i = 0; i < keyframes.size(); i++) {
     keyframes[i].pose_opti.pose.x = poses_opti.at<gtsam::Pose2>(keyframes[i].id).x();
@@ -182,7 +196,7 @@ void registration_callback(const common::Registration& input) {
   if(input.first_frame_flag) {
       ROS_INFO("--------------------------------------------");
       prior_factor(input);
-      publish_keyframes();
+      publish_graph();
       if (!keyframes.empty())
           ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
   }
@@ -196,7 +210,7 @@ void registration_callback(const common::Registration& input) {
       }
 
       //      solve();
-      publish_keyframes();
+      publish_graph();
       ROS_INFO("Laser Delta: %f %f %f", input.factor_new.delta.pose.x, input.factor_new.delta.pose.y, input.factor_new.delta.pose.theta);
       if (!keyframes.empty())
           ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
@@ -211,7 +225,7 @@ int main(int argc, char** argv) {
   // Init ID factory
   keyframe_IDs = 0;
 
-  keyframes_pub = n.advertise<common::Keyframes>("/graph/keyframes", 1);
+  graph_pub = n.advertise<common::Graph>("/graph/graph", 1);
   ros::Subscriber registration_sub = n.subscribe("/scanner/registration", 1, registration_callback);
   ros::ServiceServer last_keyframe_service = n.advertiseService("/graph/last_keyframe", last_keyframe);
   ros::ServiceServer closest_keyframe_service = n.advertiseService("/graph/closest_keyframe", closest_keyframe);
