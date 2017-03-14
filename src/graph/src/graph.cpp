@@ -25,6 +25,7 @@ void publish_graph() {
 
   for(int i = 0; i < edges.size(); i++) {
     output.edges.push_back(edges[i]);
+    ROS_INFO(" %d %d ", edges[i].id_1, edges[i].id_2);
   }
 
   graph_pub.publish(output);
@@ -34,7 +35,7 @@ void prior_factor(common::Registration input)
 {
 //	ROS_INFO("PRIOR FACTOR STARTED");
     // Advance keyframe ID factory
-    keyframe_IDs++;
+    //keyframe_IDs++;
 
     // Define prior state and noise model
     double x_prior = 0;
@@ -96,12 +97,15 @@ void new_factor(common::Registration input)
                                                               input.factor_new.delta.pose.y,
                                                               input.factor_new.delta.pose.theta),
                                                  noise_delta));
+
     common::Edge edge;
     edge.id_1 = input.factor_new.id_1;
     edge.id_2 = input.factor_new.id_2;
     edges.push_back(edge);
+    ROS_INFO("Edge pushed %d % d", edge.id_1, edge.id_2);
     ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
-	     input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors());
+	     input.factor_new.id_1, input.factor_new.id_2, keyframes.size(), graph.nrFactors());
+    //ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 }
 
 void loop_factor(common::Registration input)
