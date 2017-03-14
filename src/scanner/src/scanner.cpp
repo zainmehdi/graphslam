@@ -82,51 +82,6 @@ Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_ms
     return gicp_register(input_1, input_2, guess_null);
 }
 
-// JS: Obsolete code:
-//common::Registration gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform) {
-//
-//
-//  // assign inputs
-//  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = format_pointcloud(input_1);
-//  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_2 = format_pointcloud(input_2);
-//  gicp.setInputSource(pointcloud_1);
-//  gicp.setInputTarget(pointcloud_2);
-//
-//  // align
-//  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_transform(new pcl::PointCloud<pcl::PointXYZ>);
-//  gicp.align(*pointcloud_transform, transform);
-//  ROS_INFO("Convergence state %d", gicp.getConvergeCriteria()->getConvergenceState());
-//
-//  common::Registration output;
-//
-//  output.keyframe_flag = false;
-//  if (gicp.hasConverged())
-//  {
-//      // Get transformation Delta and compute its covariance
-//      transform = gicp.getFinalTransformation();
-//      geometry_msgs::Pose2D transform_Delta = make_Delta(transform);
-//
-//      Eigen::MatrixXd covariance_Delta = compute_covariance(k_disp_disp, k_rot_disp, k_rot_rot, transform_Delta);
-//      common::Pose2DWithCovariance Delta = create_Pose2DWithCovariance_msg(transform_Delta, covariance_Delta);
-//
-//      // Assign to outputs
-//      output.factor_new.delta  = Delta;
-//      output.factor_loop.delta = Delta;
-//
-//      if (vote_for_keyframe(Delta, gicp.getFitnessScore()))
-//      {
-//          output.keyframe_flag = true;
-//      }
-//  }
-//
-//  return output;
-//}
-//
-//common::Registration gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 input_2) {
-//    Eigen::Matrix4f guess_null(Eigen::Matrix4f::Identity());
-//    return gicp_register(input_1, input_2, guess_null);
-//}
-
 
 
 // Node functions
