@@ -14,7 +14,7 @@ int keyframe_IDs; // Simple ID factory.
 // #### TUNING CONSTANTS START
 double sigma_xy_prior = 0.1; // TODO migrate to rosparams
 double sigma_th_prior = 0.1; // TODO migrate to rosparams
-int keyframes_to_skip_in_loop_closing = 1000; // TODO migrate to rosparams
+int keyframes_to_skip_in_loop_closing = 5; // TODO migrate to rosparams
 // #### TUNING CONSTANTS END
 
 void publish_graph() {
@@ -63,7 +63,7 @@ void prior_factor(common::Registration input)
     graph.add(gtsam::PriorFactor<gtsam::Pose2>(input.keyframe_new.id, pose_prior, noise_prior));
     initial.insert(input.keyframe_new.id, pose_prior);
 
-    ROS_INFO("PRIOR FACTOR ID=%d CREATED. %lu KF, %lu Factor.", input.keyframe_new.id, keyframes.size(), graph.nrFactors());
+    ROS_INFO("PRIOR FACTOR ID=%d CREATED. %lu KF, %lu Factor, 0 loops", input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 } 
 
 void new_factor(common::Registration input)
@@ -100,7 +100,8 @@ void new_factor(common::Registration input)
     edge.id_1 = input.factor_new.id_1;
     edge.id_2 = input.factor_new.id_2;
     edges.push_back(edge);
-    ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors());
+    ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
+	     input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 }
 
 void loop_factor(common::Registration input)
@@ -122,7 +123,8 @@ void loop_factor(common::Registration input)
     edge.id_1 = input.factor_loop.id_1;
     edge.id_2 = input.factor_loop.id_2;
     edges.push_back(edge);
-    ROS_INFO("LOOP FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors());
+    ROS_INFO("LOOP FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
+	     input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors());
 }
 
 void solve() {
@@ -209,11 +211,17 @@ void registration_callback(const common::Registration& input) {
           loop_factor(input);
       }
 
-      //      solve();
+      solve();
       publish_graph();
-      ROS_INFO("Laser Delta: %f %f %f", input.factor_new.delta.pose.x, input.factor_new.delta.pose.y, input.factor_new.delta.pose.theta);
+      ROS_INFO("Laser Delta: %f %f %f",
+	       input.factor_new.delta.pose.x,
+	       input.factor_new.delta.pose.y,
+	       input.factor_new.delta.pose.theta);
       if (!keyframes.empty())
-          ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
+          ROS_INFO("Global pose: %f %f %f",
+		   keyframes.back().pose_opti.pose.x,
+		   keyframes.back().pose_opti.pose.y,
+		   keyframes.back().pose_opti.pose.theta);
   }
 
 }
