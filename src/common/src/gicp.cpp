@@ -6,7 +6,8 @@ ros::Publisher delta_pub;
 const double converged_fitness_threshold = 0.5;
 double k_disp_disp = 0.1, k_rot_disp = 0.1, k_rot_rot = 0.1;
 
-pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
+//pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
+pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
 Eigen::Matrix4f carry_transform;
 
 sensor_msgs::LaserScan robot_0_laserscan;
@@ -124,11 +125,11 @@ int main(int argc, char** argv) {
   delta_pub = n.advertise<common::Pose2DWithCovariance>("/scanner/delta", 1);
 
   // Setup GICP algorithm
-//  gicp.setUseReciprocalCorrespondences(true);
+  gicp.setUseReciprocalCorrespondences(true);
   gicp.setMaximumIterations(50); // ICP example 50
-    gicp.setMaxCorrespondenceDistance(1); // ICP example 0.05
-    gicp.setTransformationEpsilon(1e-8); // ICP example 1e-8
-    gicp.setEuclideanFitnessEpsilon(0.1); // ICP example 1
+  gicp.setMaxCorrespondenceDistance(5); // ICP example 0.05
+  gicp.setTransformationEpsilon(1e-8); // ICP example 1e-8
+  gicp.setEuclideanFitnessEpsilon(0.1); // ICP example 1
   //  gicp.setCorrespondenceRandomness();
 //  gicp.setMaximumOptimizerIterations(50);
   //  gicp.setRotationEpsilon();

@@ -14,7 +14,7 @@ int keyframe_IDs; // Simple ID factory.
 // #### TUNING CONSTANTS START
 double sigma_xy_prior = 0.1; // TODO migrate to rosparams
 double sigma_th_prior = 0.1; // TODO migrate to rosparams
-int keyframes_to_skip_in_loop_closing = 5; // TODO migrate to rosparams
+int keyframes_to_skip_in_loop_closing = 9; // TODO migrate to rosparams
 // #### TUNING CONSTANTS END
 
 void publish_graph() {
@@ -205,10 +205,10 @@ void registration_callback(const common::Registration& input) {
       publish_graph();
       if (!keyframes.empty())
           ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
+      ROS_INFO("--------------------------------------------");
   }
 
   else if(input.keyframe_flag) {
-      ROS_INFO("--------------------------------------------");
       new_factor(input);
 
       if(input.loop_closure_flag) {
@@ -222,10 +222,8 @@ void registration_callback(const common::Registration& input) {
 	       input.factor_new.delta.pose.y,
 	       input.factor_new.delta.pose.theta);
       if (!keyframes.empty())
-          ROS_INFO("Global pose: %f %f %f",
-		   keyframes.back().pose_opti.pose.x,
-		   keyframes.back().pose_opti.pose.y,
-		   keyframes.back().pose_opti.pose.theta);
+          ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
+      ROS_INFO("--------------------------------------------");
   }
 
 }
