@@ -213,14 +213,11 @@ void registration_callback(const common::Registration& input) {
 
       if(input.loop_closure_flag) {
           loop_factor(input);
+          solve();
       }
 
-      solve();
       publish_graph();
-      ROS_INFO("Laser Delta: %f %f %f",
-	       input.factor_new.delta.pose.x,
-	       input.factor_new.delta.pose.y,
-	       input.factor_new.delta.pose.theta);
+      ROS_INFO("Laser Delta: %f %f %f", input.factor_new.delta.pose.x, input.factor_new.delta.pose.y, input.factor_new.delta.pose.theta);
       if (!keyframes.empty())
           ROS_INFO("Global pose: %f %f %f", keyframes.back().pose_opti.pose.x,keyframes.back().pose_opti.pose.y,keyframes.back().pose_opti.pose.theta);
       ROS_INFO("--------------------------------------------");
