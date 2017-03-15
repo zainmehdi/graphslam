@@ -7,9 +7,9 @@ ros::ServiceClient keyframe_last_client;
 ros::ServiceClient keyframe_closest_client;
 
 // Thresholds for voting for keyframe:
-const double converged_fitness_threshold = 999; // TODO migrate to rosparams
-const double distance_threshold = 1; // TODO migrate to rosparams
-const double rotation_threshold = 1; // TODO migrate to rosparams
+const double converged_fitness_threshold = 999; // [adimensional] TODO migrate to rosparams
+const double distance_threshold = 1; // [m] TODO migrate to rosparams
+const double rotation_threshold = 1; // [rad] TODO migrate to rosparams
 const unsigned int loop_closure_skip = 4;
 
 // Uncertainty model constants
@@ -77,6 +77,7 @@ Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_ms
 
     return output;
 }
+
 Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2){
     Eigen::Matrix4f guess_null(Eigen::Matrix4f::Identity());
     return gicp_register(input_1, input_2, guess_null);
@@ -105,11 +106,11 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
         ROS_INFO("### NO LAST KEYFRAME FOUND ###");
 
         // Set flags, assign pointcloud, and publish
-        output.first_frame_flag = true;
-        output.keyframe_flag = false;
-        output.loop_closure_flag = false;
-        output.keyframe_new.scan = input;
-        output.keyframe_new.pointcloud = scan_to_pointcloud(input);
+        output.first_frame_flag         = true;
+        output.keyframe_flag            = false;
+        output.loop_closure_flag        = false;
+        output.keyframe_new.scan        = input;
+        output.keyframe_new.pointcloud  = scan_to_pointcloud(input);
         registration_pub.publish(output);
     }
 
@@ -130,14 +131,14 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
         //    ROS_INFO("align time: %f", end - start);
         //    std::cout << "scanner_callback::Transform: \n" << carry_transform << std::endl;
 
-        output.keyframe_flag = vote_for_keyframe(alignement_last.Delta, alignement_last.fitness);
-        output.keyframe_new.ts = input.header.stamp;
-        output.keyframe_new.pointcloud = input_pointcloud;
-        output.keyframe_new.scan = input;
-        output.keyframe_last = keyframe_last_request.response.keyframe_last;
-        output.factor_new.id_1 = keyframe_last_request.response.keyframe_last.id;
-        output.factor_new.id_2 = output.keyframe_new.id;
-        output.factor_new.delta = alignement_last.Delta;
+        output.keyframe_flag            = vote_for_keyframe(alignement_last.Delta, alignement_last.fitness);
+        output.keyframe_new.ts          = input.header.stamp;
+        output.keyframe_new.pointcloud  = input_pointcloud;
+        output.keyframe_new.scan        = input;
+        output.keyframe_last            = keyframe_last_request.response.keyframe_last;
+        output.factor_new.id_1          = keyframe_last_request.response.keyframe_last.id;
+        output.factor_new.id_2          = output.keyframe_new.id;
+        output.factor_new.delta         = alignement_last.Delta;
 
         // Check for loop closures only if on Keyframes
         if (output.keyframe_flag)
@@ -168,18 +169,18 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
                     Alignement alignement_loop = gicp_register(keyframe_closest_pointcloud, keyframe_last_pointcloud,
                                                                 loop_transform);
 
-                    // compute factor things
-                    output.loop_closure_flag = alignement_loop.converged;
                     ROS_INFO("LC: convergence state: %d", alignement_loop.convergence_state);
                     ROS_INFO("LC: Delta: %f %f %f", alignement_loop.Delta.pose.x, alignement_loop.Delta.pose.y, alignement_loop.Delta.pose.theta);
 
+                    // compute factor things
+                    output.loop_closure_flag        = alignement_loop.converged;
                     if (alignement_loop.converged)
                     {
-                        output.keyframe_last = keyframe_last_request.response.keyframe_last;
-                        output.keyframe_loop = keyframe_closest_request.response.keyframe_closest;
-                        output.factor_loop.id_1 = keyframe_last_request.response.keyframe_last.id;
-                        output.factor_loop.id_2 = keyframe_closest_request.response.keyframe_closest.id;
-                        output.factor_loop.delta = alignement_loop.Delta;
+                        output.keyframe_last        = keyframe_last_request.response.keyframe_last;
+                        output.keyframe_loop        = keyframe_closest_request.response.keyframe_closest;
+                        output.factor_loop.id_1     = keyframe_last_request.response.keyframe_last.id;
+                        output.factor_loop.id_2     = keyframe_closest_request.response.keyframe_closest.id;
+                        output.factor_loop.delta    = alignement_loop.Delta;
                     }
                 }
             }
