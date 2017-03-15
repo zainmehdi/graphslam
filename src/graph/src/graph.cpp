@@ -10,6 +10,7 @@ std::vector<common::Keyframe> keyframes; // JS: Better use map<key,Keyframe> whe
 std::vector<common::Factor> factors; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
 int keyframe_IDs; // Simple ID factory.
 
+
 // #### TUNING CONSTANTS START
 double sigma_xy_prior = 0.1; // TODO migrate to rosparams
 double sigma_th_prior = 0.1; // TODO migrate to rosparams
@@ -131,7 +132,7 @@ void solve() {
   //initial.print();
   gtsam::Values poses_opti = gtsam::LevenbergMarquardtOptimizer(graph, initial).optimize();
 //  gtsam::Marginals marginals(graph, poses_opti);
-  poses_opti.print();
+//  poses_opti.print();
 
   for(int i = 0; i < keyframes.size(); i++) {
     keyframes[i].pose_opti.pose.x = poses_opti.at<gtsam::Pose2>(keyframes[i].id).x();
