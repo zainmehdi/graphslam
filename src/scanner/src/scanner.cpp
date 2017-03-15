@@ -14,7 +14,7 @@ const double rotation_threshold = 1; // [rad] TODO migrate to rosparams
 const unsigned int loop_closure_skip = 5;
 
 // Uncertainty model constants
-const double k_disp_disp = 0.001, k_rot_disp = 0.002, k_rot_rot = 0.003; // TODO migrate to rosparams
+const double k_disp_disp = 0.001, k_rot_disp = 0.001, k_rot_rot = 0.001; // TODO migrate to rosparams
 
 // GICP algorithm
 // alignement output
