@@ -32,14 +32,14 @@ void graph_callback(const common::Graph& input) {
     
     for(int j = 0; j < input.keyframes.size(); j++) {
       if(input.keyframes[j].id == input.edges[i].id_1) {
-	id_1_pose = input.keyframes[i].pose_opti.pose;
+	id_1_pose = input.keyframes[i].pose_opti.pose; // JS: I think it's keyframes[j] with `j` and not `i`
 	p_1_found = true;
       }
     }
 
     for(int j = 0; j < input.keyframes.size(); j++) {
       if(input.keyframes[j].id == input.edges[i].id_2) {
-	id_2_pose = input.keyframes[i].pose_opti.pose;
+	id_2_pose = input.keyframes[i].pose_opti.pose; // JS: I think it's keyframes[j] with `j` and not `i`
 	p_2_found = true;
       }
     }
@@ -50,15 +50,19 @@ void graph_callback(const common::Graph& input) {
       p_1.y = id_1_pose.y;
       ROS_INFO("p_1 %f %f", id_1_pose.x, id_1_pose.y);
       points.points.push_back(p_1);
-      line_strip.points.push_back(p_1);
+      line_strip.points.push_back(p_1); // JS: Only the edges of motion factors form a line strip, not those at loop closures: these are individual segments.
 
       geometry_msgs::Point p_2;
       p_2.x = id_2_pose.x;
       p_2.y = id_2_pose.y;
       ROS_INFO("p_2 %f %f", id_2_pose.x, id_2_pose.y);
       points.points.push_back(p_2);
-      line_strip.points.push_back(p_2);
+      line_strip.points.push_back(p_2); // JS: Only the edges of motion factors form a line strip, not those at loop closures: these are individual segments.
       line_list.points.push_back(p_2);
+
+      // JS: I think you better separate edges of type 'motion', and use a line strip for them, from edges of type 'loop closure', and use line list for them.
+      // JS: You can make this separation already in the msg::Graph, which would include -keyframes -motion_edges -loop_edges
+
     }
   }
 }
@@ -66,7 +70,7 @@ void graph_callback(const common::Graph& input) {
 int main( int argc, char** argv ) {
   ros::init(argc, argv, "basic_shapes");
   ros::NodeHandle n;
-  ros::Rate(100);
+  ros::Rate(5);
   ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
   ros::Publisher pose_array_pub = n.advertise<geometry_msgs::PoseArray>("/keyframe/poses", 50);
   ros::Subscriber graph_sub = n.subscribe("/graph/graph", 1, graph_callback);
