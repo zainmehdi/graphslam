@@ -143,6 +143,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
         // Check for loop closures only if on Keyframes
         if (output.keyframe_flag)
         {
+        	ROS_INFO("align time: %f", end - start);
             carry_transform.setIdentity();
 
             loop_closure_skip_count++;
