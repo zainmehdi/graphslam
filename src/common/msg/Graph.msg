@@ -1,2 +1,2 @@
 common/Keyframe[] keyframes
-common/Edge[] edges
+common/Factor[] factors

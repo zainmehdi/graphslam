@@ -1,14 +1,13 @@
 #include <graph.hpp>
-#include <common/Keyframes.h>
+#include <common/Factor.h>
 #include <common/Graph.h>
 
-ros::Publisher keyframes_pub;
 ros::Publisher graph_pub;
 gtsam::NonlinearFactorGraph graph;
 gtsam::Values initial;
 common::Pose2DWithCovariance pose_opt;
 std::vector<common::Keyframe> keyframes; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
-std::vector<common::Edge> edges; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
+std::vector<common::Factor> factors; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
 int keyframe_IDs; // Simple ID factory.
 
 // #### TUNING CONSTANTS START
@@ -23,89 +22,85 @@ void publish_graph() {
     output.keyframes.push_back(keyframes[i]);
   }
 
-  for(int i = 0; i < edges.size(); i++) {
-    output.edges.push_back(edges[i]);
-    ROS_INFO(" %d %d ", edges[i].id_1, edges[i].id_2);
+  for(int i = 0; i < factors.size(); i++) {
+    output.factors.push_back(factors[i]);
+    //    ROS_INFO(" %d %d ", factors[i].id_1, factors[i].id_2);
   }
 
   graph_pub.publish(output);
 }
 
-void prior_factor(common::Registration input)
-{
-//	ROS_INFO("PRIOR FACTOR STARTED");
-    // Advance keyframe ID factory
-    //keyframe_IDs++;
+void prior_factor(common::Registration input) {
+  // ROS_INFO("PRIOR FACTOR STARTED");
+  // Advance keyframe ID factory
+  keyframe_IDs++;
 
-    // Define prior state and noise model
-    double x_prior = 0;
-    double y_prior = 0;
-    double th_prior = 0;
+  // Define prior state and noise model
+  double x_prior = 0;
+  double y_prior = 0;
+  double th_prior = 0;
 
-    Eigen::MatrixXd Q(3, 3);
-    Q.setZero();
-    Q(0, 0) = sigma_xy_prior * sigma_xy_prior;
-    Q(1, 1) = sigma_xy_prior * sigma_xy_prior;
-    Q(2, 2) = sigma_th_prior * sigma_th_prior;
+  Eigen::MatrixXd Q(3, 3);
+  Q.setZero();
+  Q(0, 0) = sigma_xy_prior * sigma_xy_prior;
+  Q(1, 1) = sigma_xy_prior * sigma_xy_prior;
+  Q(2, 2) = sigma_th_prior * sigma_th_prior;
 
-    gtsam::Pose2 pose_prior(x_prior, y_prior, th_prior);
-    gtsam::noiseModel::Gaussian::shared_ptr noise_prior = gtsam::noiseModel::Gaussian::Covariance(Q);
+  gtsam::Pose2 pose_prior(x_prior, y_prior, th_prior);
+  gtsam::noiseModel::Gaussian::shared_ptr noise_prior = gtsam::noiseModel::Gaussian::Covariance(Q);
 
-    // Define new KF
-    input.keyframe_new.id = keyframe_IDs;
-    // input.keyframe_new.pose_odom = // TODO: get odometry pose from odometry_pose service.
-//    input.keyframe_new.pose_opti = create_Pose2DWithCovariance_msg(x_prior, y_prior, th_prior, Q); // TODO fix this
-    input.keyframe_new.pose_opti.pose.x  = x_prior;
-    input.keyframe_new.pose_opti.pose.y  = y_prior;
-    input.keyframe_new.pose_opti.pose.theta = th_prior;
-    keyframes.push_back(input.keyframe_new);
+  // Define new KF
+  input.keyframe_new.id = keyframe_IDs;
+  // input.keyframe_new.pose_odom = // TODO: get odometry pose from odometry_pose service.
+  // input.keyframe_new.pose_opti = create_Pose2DWithCovariance_msg(x_prior, y_prior, th_prior, Q); // TODO fix this
+  input.keyframe_new.pose_opti.pose.x  = x_prior;
+  input.keyframe_new.pose_opti.pose.y  = y_prior;
+  input.keyframe_new.pose_opti.pose.theta = th_prior;
+  keyframes.push_back(input.keyframe_new);
 
-    // Add factor and prior to the graph
-    graph.add(gtsam::PriorFactor<gtsam::Pose2>(input.keyframe_new.id, pose_prior, noise_prior));
-    initial.insert(input.keyframe_new.id, pose_prior);
+  // Add factor and prior to the graph
+  graph.add(gtsam::PriorFactor<gtsam::Pose2>(input.keyframe_new.id, pose_prior, noise_prior));
+  initial.insert(input.keyframe_new.id, pose_prior);
 
-    ROS_INFO("PRIOR FACTOR ID=%d CREATED. %lu KF, %lu Factor, 0 loops", input.keyframe_new.id, keyframes.size(), graph.nrFactors());
+  ROS_INFO("PRIOR FACTOR ID=%d CREATED. %lu KF, %lu Factor, 0 loops",
+	   input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 } 
 
-void new_factor(common::Registration input)
-{
-//    ROS_INFO("NEW FACTOR ID=%d CREATION STARTED.", input.keyframe_new.id);
+void new_factor(common::Registration input) {
+  // ROS_INFO("NEW FACTOR ID=%d CREATION STARTED.", input.keyframe_new.id);
+  // Advance keyframe ID factory
+  keyframe_IDs++;
 
-    // Advance keyframe ID factory
-    keyframe_IDs++;
+  // Compute new KF pose
+  common::Pose2DWithCovariance pose_new_msg = compose(input.keyframe_last.pose_opti, input.factor_new.delta);
+  gtsam::Pose2 pose_new(pose_new_msg.pose.x, pose_new_msg.pose.y, pose_new_msg.pose.theta);
 
-    // Compute new KF pose
-    common::Pose2DWithCovariance pose_new_msg = compose(input.keyframe_last.pose_opti, input.factor_new.delta);
-    gtsam::Pose2 pose_new(pose_new_msg.pose.x, pose_new_msg.pose.y, pose_new_msg.pose.theta);
+  // Define new KF
+  input.keyframe_new.id = keyframe_IDs;
+  input.keyframe_new.pose_opti = pose_new_msg;
+  // input.keyframe_new.pose_odom = // TODO: get odometry pose from odometry_pose service.
+  keyframes.push_back(input.keyframe_new);
 
-    // Define new KF
-    input.keyframe_new.id = keyframe_IDs;
-    input.keyframe_new.pose_opti = pose_new_msg;
-    // input.keyframe_new.pose_odom = // TODO: get odometry pose from odometry_pose service.
-    keyframes.push_back(input.keyframe_new);
+  // Define new factor
+  input.factor_new.id_2 = input.keyframe_new.id;
+  Eigen::MatrixXd Q = covariance_to_eigen(input.factor_new);
+  gtsam::noiseModel::Gaussian::shared_ptr noise_delta = gtsam::noiseModel::Gaussian::Covariance(Q);
 
-    // Define new factor
-    input.factor_new.id_2 = input.keyframe_new.id;
-    Eigen::MatrixXd Q = covariance_to_eigen(input.factor_new);
-    gtsam::noiseModel::Gaussian::shared_ptr noise_delta = gtsam::noiseModel::Gaussian::Covariance(Q);
-
-    // Add factor and state to the graph
-    initial.insert(input.keyframe_new.id, pose_new);
-    graph.add(gtsam::BetweenFactor<gtsam::Pose2>(input.factor_new.id_1,
-                                                 input.factor_new.id_2,
-                                                 gtsam::Pose2(input.factor_new.delta.pose.x,
-                                                              input.factor_new.delta.pose.y,
-                                                              input.factor_new.delta.pose.theta),
-                                                 noise_delta));
-
-    common::Edge edge;
-    edge.id_1 = input.factor_new.id_1;
-    edge.id_2 = input.factor_new.id_2;
-    edges.push_back(edge);
-    ROS_INFO("Edge pushed %d % d", edge.id_1, edge.id_2);
-    ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
-	     input.factor_new.id_1, input.factor_new.id_2, keyframes.size(), graph.nrFactors());
-    //ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors());
+  // Add factor and state to the graph
+  initial.insert(input.keyframe_new.id, pose_new);
+  graph.add(gtsam::BetweenFactor<gtsam::Pose2>(input.factor_new.id_1,
+					       input.factor_new.id_2,
+					       gtsam::Pose2(input.factor_new.delta.pose.x,
+							    input.factor_new.delta.pose.y,
+							    input.factor_new.delta.pose.theta),
+					       noise_delta));
+  common::Factor factor = input.factor_new;
+  factor.loop = false;
+  factors.push_back(factor);
+  ROS_INFO("Edge pushed %d % d", factor.id_1, factor.id_2);
+  ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
+	   input.factor_new.id_1, input.factor_new.id_2, keyframes.size(), graph.nrFactors());
+  //ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 }
 
 void loop_factor(common::Registration input)
@@ -123,10 +118,9 @@ void loop_factor(common::Registration input)
                                                               input.factor_loop.delta.pose.y,
                                                               input.factor_loop.delta.pose.theta),
                                                  noise_delta));
-    common::Edge edge;
-    edge.id_1 = input.factor_loop.id_1;
-    edge.id_2 = input.factor_loop.id_2;
-    edges.push_back(edge);
+    common::Factor factor = input.factor_loop;
+    factor.loop = true;
+    factors.push_back(factor);
     ROS_INFO("LOOP FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
 	     input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors());
 }

@@ -24,11 +24,9 @@ find_package(
 
 add_message_files(
   FILES
-  Edge.msg
   Graph.msg
   Factor.msg
   Keyframe.msg
-  Keyframes.msg
   Odometry.msg
   Registration.msg
   Pose2DWithCovariance.msg

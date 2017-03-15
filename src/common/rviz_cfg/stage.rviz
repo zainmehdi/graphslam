@@ -90,10 +90,10 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: visualization_marker
+      Marker Topic: /keyframe_marker
       Name: Marker
       Namespaces:
-        points_and_lines: true
+        keyframe_points_and_lines: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -111,6 +111,14 @@ Visualization Manager:
       Shape: Arrow (Flat)
       Topic: /keyframe/poses
       Unreliable: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /loop_marker
+      Name: Marker
+      Namespaces:
+        loop_points_and_lines: true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
