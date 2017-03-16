@@ -2,8 +2,6 @@
 #include <vector>
 #include <deque>
 
-#include <Eigen/Core>
-
 #include <ros/ros.h>
 
 #include <common/Odometry.h>
