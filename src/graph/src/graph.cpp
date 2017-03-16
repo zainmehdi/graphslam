@@ -2,20 +2,19 @@
 #include <common/Factor.h>
 #include <common/Graph.h>
 
-ros::Publisher graph_pub;
-gtsam::NonlinearFactorGraph graph;
-gtsam::Values initial;
-common::Pose2DWithCovariance pose_opt;
-std::vector<common::Keyframe> keyframes; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
-std::vector<common::Factor> factors; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
-int keyframe_IDs; // Simple ID factory.
-
-
 // #### TUNING CONSTANTS START
 double sigma_xy_prior = 0.1; // TODO migrate to rosparams
 double sigma_th_prior = 0.1; // TODO migrate to rosparams
 int keyframes_to_skip_in_loop_closing = 4; // TODO migrate to rosparams
 // #### TUNING CONSTANTS END
+
+gtsam::NonlinearFactorGraph graph;
+gtsam::Values poses_initial;
+std::vector<common::Keyframe> keyframes; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
+std::vector<common::Factor> factors; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
+int keyframe_IDs; // Simple ID factory.
+ros::Publisher graph_pub;
+
 
 void publish_graph() {
   common::Graph output;
@@ -60,7 +59,7 @@ void prior_factor(common::Registration input) {
 
   // Add factor and prior to the graph
   graph.add(gtsam::PriorFactor<gtsam::Pose2>(input.keyframe_new.id, pose_prior, noise_prior));
-  initial.insert(input.keyframe_new.id, pose_prior);
+  poses_initial.insert(input.keyframe_new.id, pose_prior);
 
   // print debug info
   ROS_INFO("PRIOR FACTOR ID=%d CREATED. %lu KF, %lu Factor, 0 loops",
@@ -88,7 +87,7 @@ void new_factor(common::Registration input) {
   gtsam::noiseModel::Gaussian::shared_ptr noise_delta = gtsam::noiseModel::Gaussian::Covariance(Q);
 
   // Add factor and state to the graph
-  initial.insert(input.keyframe_new.id, pose_new);
+  poses_initial.insert(input.keyframe_new.id, pose_new);
   graph.add(gtsam::BetweenFactor<gtsam::Pose2>(input.factor_new.id_1,
 					       input.factor_new.id_2,
 					       gtsam::Pose2(input.factor_new.delta.pose.x,
@@ -130,18 +129,20 @@ void loop_factor(common::Registration input)
 
 void solve() {
 
-  gtsam::Values poses_opti = gtsam::LevenbergMarquardtOptimizer(graph, initial).optimize();
+  gtsam::Values poses_optimized = gtsam::LevenbergMarquardtOptimizer(graph, poses_initial).optimize();
 
 
   for(int i = 0; i < keyframes.size(); i++) {
-    keyframes[i].pose_opti.pose.x = poses_opti.at<gtsam::Pose2>(keyframes[i].id).x();
-    keyframes[i].pose_opti.pose.y = poses_opti.at<gtsam::Pose2>(keyframes[i].id).y();
-    keyframes[i].pose_opti.pose.theta = poses_opti.at<gtsam::Pose2>(keyframes[i].id).theta();
+    keyframes[i].pose_opti.pose.x = poses_optimized.at<gtsam::Pose2>(keyframes[i].id).x();
+    keyframes[i].pose_opti.pose.y = poses_optimized.at<gtsam::Pose2>(keyframes[i].id).y();
+    keyframes[i].pose_opti.pose.theta = poses_optimized.at<gtsam::Pose2>(keyframes[i].id).theta();
 //    Eigen::MatrixXd pose_opti_covariance = marginals.marginalCovariance(keyframes[i].id);
 //    keyframes[i].pose_opti = eigen_to_covariance(keyframes[i].pose_opti, pose_opti_covariance);
   }
 
-  initial = poses_opti;
+  // get ready for next iteration: set next initial to the currently optimized values
+  poses_initial = poses_optimized;
+
   ROS_INFO("SOLVE FINISHED.");
 }
 

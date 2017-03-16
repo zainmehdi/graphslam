@@ -1,12 +1,7 @@
 #include <scanner.hpp>
 #include <iostream>
 
-ros::Publisher registration_pub;
-ros::Publisher pointcloud_debug_pub;
-ros::Publisher delta_pub;
-ros::ServiceClient keyframe_last_client;
-ros::ServiceClient keyframe_closest_client;
-
+// #### TUNING CONSTANTS START
 // Thresholds for voting for keyframe:
 const double converged_fitness_threshold = 999; // [adimensional] TODO migrate to rosparams
 const double distance_threshold = 1; // [m] TODO migrate to rosparams
@@ -15,6 +10,13 @@ const unsigned int loop_closure_skip = 5;
 
 // Uncertainty model constants
 const double k_disp_disp = 0.001, k_rot_disp = 0.001, k_rot_rot = 0.001; // TODO migrate to rosparams
+// #### TUNING CONSTANTS END
+
+ros::Publisher registration_pub;
+ros::Publisher pointcloud_debug_pub;
+ros::Publisher delta_pub;
+ros::ServiceClient keyframe_last_client;
+ros::ServiceClient keyframe_closest_client;
 
 // GICP algorithm
 // alignement output
