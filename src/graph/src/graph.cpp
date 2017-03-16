@@ -11,8 +11,9 @@ int keyframes_to_skip_in_loop_closing = 4; // TODO migrate to rosparams
 gtsam::NonlinearFactorGraph graph;
 gtsam::Values poses_initial;
 std::vector<common::Keyframe> keyframes; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
-std::vector<common::Factor> factors; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
-int keyframe_IDs; // Simple ID factory.
+std::vector<common::Factor> factors;
+int keyframe_IDs; // Simple ID factory for keyframes.
+
 ros::Publisher graph_pub;
 
 

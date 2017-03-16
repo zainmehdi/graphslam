@@ -65,7 +65,7 @@ void graph_callback(const common::Graph& input) {
       }
     }
 
-    // append loop pints and factors
+    // append loop points and factors
     if(p_1_found && p_2_found && input.factors[i].id_1 != input.factors[i].id_2 ) {
       geometry_msgs::Point pnt_1;
       pnt_1.x = pose_1.x;
@@ -74,7 +74,6 @@ void graph_callback(const common::Graph& input) {
       pnt_2.x = pose_2.x;
       pnt_2.y = pose_2.y;
       
-
       loop_points.points.push_back(pnt_1);
       loop_points.points.push_back(pnt_2);
       loop_line_list.points.push_back(pnt_1);
