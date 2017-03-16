@@ -124,12 +124,12 @@ int main( int argc, char** argv ) {
   keyframe_line_strip.ns = "keyframe_points_and_lines";
 
   // loop closure position markers
-  loop_points.id = 1;
+  loop_points.id = 2;
   loop_points.type = visualization_msgs::Marker::SPHERE_LIST;
   loop_points.action = visualization_msgs::Marker::ADD;
-  loop_points.scale.x = 0.1;
-  loop_points.scale.y = 0.1;
-  loop_points.scale.z = 0.1;
+  loop_points.scale.x = 0.11;
+  loop_points.scale.y = 0.11;
+  loop_points.scale.z = 0.11;
   loop_points.color.r = 1.0f;
   loop_points.color.g = 1.0f;
   loop_points.color.b = 1.0f;
@@ -140,7 +140,7 @@ int main( int argc, char** argv ) {
   loop_points.pose.orientation.w = 1.0;
 
   // loop closure factor segments
-  loop_line_list.id = 0;
+  loop_line_list.id = 3;
   loop_line_list.type = visualization_msgs::Marker::LINE_LIST;
   loop_line_list.scale.x = 0.02;
   loop_line_list.color.r = 1.0;
