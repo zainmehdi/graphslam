@@ -86,12 +86,13 @@ Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_ms
     Alignement output;
     output.convergence_state = gicp.getConvergeCriteria()->getConvergenceState();
     output.converged = gicp.hasConverged();
+    output.fitness = gicp.getFitnessScore();
+
+//    ROS_INFO("Alignement converged: (%d) with fitness: %f", output.converged, output.fitness);
 
     if (gicp.hasConverged())
     {
         transform = gicp.getFinalTransformation();
-
-        output.fitness = gicp.getFitnessScore();
 
         // Get transformation Delta and compute its covariance
         output.transform = transform;
@@ -247,6 +248,21 @@ int main(int argc, char** argv) {
 
   // Setup GICP algorithm
   //    gicp.setMaximumOptimizerIterations(50);
+
+  // Spy ICP convergence criteria:
+  ROS_INFO("ICP: max iter sim transf: %d", gicp.getConvergeCriteria()->getMaximumIterationsSimilarTransforms());
+  ROS_INFO("ICP: fail after max iter: %d ", gicp.getConvergeCriteria()->getFailureAfterMaximumIterations());
+  ROS_INFO("ICP: abs MSE : %f [x1e8]", 1e8*gicp.getConvergeCriteria()->getAbsoluteMSE());
+  ROS_INFO("ICP: rel MSE : %f ", gicp.getConvergeCriteria()->getRelativeMSE());
+  ROS_INFO("ICP: rot th  : %f [rad]", acos(gicp.getConvergeCriteria()->getRotationThreshold()));
+  ROS_INFO("ICP: trans th: %f [m]", sqrt(gicp.getConvergeCriteria()->getTranslationThreshold()));
+  ROS_INFO("ICP: max iter: %d ", gicp.getConvergeCriteria()->getMaximumIterations());
+
+  gicp.getConvergeCriteria()->setMaximumIterationsSimilarTransforms(10);
+  ROS_INFO("ICP: max iter sim transf: %d", gicp.getConvergeCriteria()->getMaximumIterationsSimilarTransforms());
+
+  //  gicp.getConvergeCriteria()->setFailureAfterMaximumIterations(true);
+  //  ROS_INFO("ICP: fail after max iter: %d ", gicp.getConvergeCriteria()->getFailureAfterMaximumIterations());
 
   carry_transform.setIdentity();
   loop_closure_skip_count = 0;
