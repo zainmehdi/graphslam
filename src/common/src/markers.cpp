@@ -11,14 +11,14 @@
 #include <visualization_msgs/Marker.h>
 
 geometry_msgs::PoseArray pose_optis;
-visualization_msgs::Marker keyframe_points, keyframe_line_strip; //, keyframe_line_list;
+visualization_msgs::Marker keyframe_points, keyframe_line_strip, keyframe_line_list;
 visualization_msgs::Marker loop_points, loop_line_list;
 
 void graph_callback(const common::Graph& input) {
   pose_optis.poses.clear();
   keyframe_points.points.clear();
   keyframe_line_strip.points.clear();
-//  keyframe_line_list.points.clear();
+  keyframe_line_list.points.clear();
   loop_points.points.clear();
   loop_line_list.points.clear();
   
@@ -67,8 +67,8 @@ void graph_callback(const common::Graph& input) {
 	keyframe_points.points.push_back(p_2);
 	keyframe_line_strip.points.push_back(p_1);
 	keyframe_line_strip.points.push_back(p_2);
-//	keyframe_line_list.points.push_back(p_1);
-//	keyframe_line_list.points.push_back(p_2);
+	keyframe_line_list.points.push_back(p_1);
+	keyframe_line_list.points.push_back(p_2);
       }
     }
   }
@@ -97,22 +97,22 @@ int main( int argc, char** argv ) {
   loop_points.id = 1;
   keyframe_line_strip.id = 1;
   loop_line_list.id = 0;
-//  keyframe_line_list.id = 2;
+  keyframe_line_list.id = 2;
   keyframe_points.type = visualization_msgs::Marker::POINTS;
   loop_points.type = visualization_msgs::Marker::POINTS;
   keyframe_line_strip.type = visualization_msgs::Marker::LINE_STRIP;
   loop_line_list.type = visualization_msgs::Marker::LINE_LIST;
-//  keyframe_line_list.type = visualization_msgs::Marker::LINE_LIST;
+  keyframe_line_list.type = visualization_msgs::Marker::LINE_LIST;
   keyframe_points.scale.x = loop_points.scale.x = 0.1;
   keyframe_points.scale.y = loop_points.scale.y = 0.1;
   keyframe_line_strip.scale.x = loop_line_list.scale.x = 0.03;
-//  keyframe_line_list.scale.x = 0.03;
+  keyframe_line_list.scale.x = 0.03;
   keyframe_points.color.g = 1.0f;
   keyframe_points.color.a = 1.0;
   keyframe_line_strip.color.b = 1.0;
   keyframe_line_strip.color.a = 1.0;
-//  keyframe_line_list.color.b = 1.0;
-//  keyframe_line_list.color.a = 1.0;
+  keyframe_line_list.color.b = 1.0;
+  keyframe_line_list.color.a = 1.0;
   loop_points.color.r = 1.0f;
   loop_points.color.g = 1.0f;
   loop_points.color.b = 1.0f;
