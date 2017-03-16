@@ -77,9 +77,6 @@ Eigen::Matrix4f make_transform(const geometry_msgs::Pose2D& Delta) {
 // JS: Isn't it possible to place these functions in a common place for everyone to share?? Like in common/src/ or something? I have made this comment a lot of times :-(
 Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_disp, const double k_rot_rot, geometry_msgs::Pose2D input)
 {
-//  double k_disp_disp = 0.1; // JS: I put these as input params for this function. Remove these lines.
-//  double k_rot_disp = 0.1;
-//  double k_rot_rot = 0.1;
   
   double Dl = sqrt( pow( input.x, 2 ) + pow( input.y, 2) );
   double sigma_xy_squared = k_disp_disp * Dl;
@@ -94,24 +91,22 @@ Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_
 }
 
 sensor_msgs::PointCloud2 scan_to_pointcloud(sensor_msgs::LaserScan input) {
-//  ROS_INFO("SCAN TO POINTCLOUD STARTED.");
+
   laser_geometry::LaserProjection projector;
   sensor_msgs::PointCloud2 output;
   projector.projectLaser(input, output);
 
-//  ROS_INFO("SCAN TO POINTCLOUD FINISHED.");
   return output;
 }
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr format_pointcloud(sensor_msgs::PointCloud2 input) {
-//  ROS_INFO("FORMAT POINTCLOUD STARTED.");
+
   pcl::PCLPointCloud2 pcl2_pointcloud;
   pcl_conversions::toPCL(input, pcl2_pointcloud);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr output(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromPCLPointCloud2(pcl2_pointcloud, *output);
 
-//  ROS_INFO("FORMAT POINTCLOUD FINISHED.");
   return output;
 }
 

@@ -25,14 +25,13 @@ void publish_graph() {
 
   for(int i = 0; i < factors.size(); i++) {
     output.factors.push_back(factors[i]);
-    //    ROS_INFO(" %d %d ", factors[i].id_1, factors[i].id_2);
   }
 
   graph_pub.publish(output);
 }
 
 void prior_factor(common::Registration input) {
-  // ROS_INFO("PRIOR FACTOR STARTED");
+
   // Advance keyframe ID factory
   keyframe_IDs++;
 
@@ -63,12 +62,13 @@ void prior_factor(common::Registration input) {
   graph.add(gtsam::PriorFactor<gtsam::Pose2>(input.keyframe_new.id, pose_prior, noise_prior));
   initial.insert(input.keyframe_new.id, pose_prior);
 
+  // print debug info
   ROS_INFO("PRIOR FACTOR ID=%d CREATED. %lu KF, %lu Factor, 0 loops",
 	   input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 } 
 
 void new_factor(common::Registration input) {
-  // ROS_INFO("NEW FACTOR ID=%d CREATION STARTED.", input.keyframe_new.id);
+
   // Advance keyframe ID factory
   keyframe_IDs++;
 
@@ -98,15 +98,15 @@ void new_factor(common::Registration input) {
   common::Factor factor = input.factor_new;
   factor.loop = false;
   factors.push_back(factor);
+
+  // print debug info
   ROS_INFO("Edge pushed %d % d", factor.id_1, factor.id_2);
   ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
 	   input.factor_new.id_1, input.factor_new.id_2, keyframes.size(), graph.nrFactors());
-  //ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors", input.keyframe_last.id, input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 }
 
 void loop_factor(common::Registration input)
 {
-//    ROS_INFO("LOOP FACTOR %d-->%d STARTED.", input.factor_loop.id_1, input.factor_loop.id_2);
 
     // Define new factor
     Eigen::MatrixXd Q = covariance_to_eigen(input.factor_loop);
@@ -122,17 +122,16 @@ void loop_factor(common::Registration input)
     common::Factor factor = input.factor_loop;
     factor.loop = true;
     factors.push_back(factor);
+
+    // print debug info
     ROS_INFO("LOOP FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
 	     input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors());
 }
 
 void solve() {
-//  ROS_INFO("SOLVE STARTED.");
-  //graph.print();
-  //initial.print();
+
   gtsam::Values poses_opti = gtsam::LevenbergMarquardtOptimizer(graph, initial).optimize();
-//  gtsam::Marginals marginals(graph, poses_opti);
-//  poses_opti.print();
+
 
   for(int i = 0; i < keyframes.size(); i++) {
     keyframes[i].pose_opti.pose.x = poses_opti.at<gtsam::Pose2>(keyframes[i].id).x();
@@ -147,19 +146,18 @@ void solve() {
 }
 
 bool last_keyframe(common::LastKeyframe::Request &req, common::LastKeyframe::Response &res) {
-//  ROS_INFO("LAST KEYFRAME SERVICE STARTED.");
+
   if(!keyframes.empty()) {
     res.keyframe_last = keyframes.back();
-//    ROS_INFO("LAST KEYFRAME ID=%d SERVICE FINISHED.", keyframes.back().id);
+
     return true;
   }
 
-//  ROS_INFO("LAST KEYFRAME SERVICE FINISHED. No keyframes available.");
   return false;
 }
 
 bool closest_keyframe(common::ClosestKeyframe::Request &req, common::ClosestKeyframe::Response &res) {
-//  ROS_INFO("CLOSEST KEYFRAME SERVICE STARTED.");
+
   if(!keyframes.empty()) {
     std::vector<double> distances;
 

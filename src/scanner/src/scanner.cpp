@@ -80,7 +80,6 @@ Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_ms
     // align
     pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_transform(new pcl::PointCloud<pcl::PointXYZ>);
     gicp.align(*pointcloud_transform, transform);
-//    ROS_INFO("Convergence state %d", gicp.getConvergeCriteria()->getConvergenceState());
 
     Alignement output;
     output.convergence_state = gicp.getConvergeCriteria()->getConvergenceState();
