@@ -100,9 +100,9 @@ void new_factor(common::Registration input) {
   factors.push_back(factor);
 
   // print debug info
-  ROS_INFO("Edge pushed %d % d", factor.id_1, factor.id_2);
-  ROS_INFO("NEW FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
-	   input.factor_new.id_1, input.factor_new.id_2, keyframes.size(), graph.nrFactors());
+//  ROS_INFO("Edge pushed %d % d", factor.id_1, factor.id_2);
+  ROS_INFO("MOTION FACTOR %d-->%d. %lu KFs, %lu Factors, %lu Loops",
+	   input.factor_new.id_1, input.factor_new.id_2, keyframes.size(), graph.nrFactors(), graph.nrFactors() - keyframes.size());
 }
 
 void loop_factor(common::Registration input)
@@ -124,8 +124,8 @@ void loop_factor(common::Registration input)
     factors.push_back(factor);
 
     // print debug info
-    ROS_INFO("LOOP FACTOR %d-->%d CREATED. %lu KFs, %lu Factors",
-	     input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors());
+    ROS_INFO("LOOP FACTOR %d-->%d. %lu KFs, %lu Factors, %lu Loops",
+	     input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors(), graph.nrFactors() - keyframes.size());
 }
 
 void solve() {
