@@ -14,7 +14,7 @@ int keyframe_IDs; // Simple ID factory.
 // #### TUNING CONSTANTS START
 double sigma_xy_prior = 0.1; // TODO migrate to rosparams
 double sigma_th_prior = 0.1; // TODO migrate to rosparams
-int keyframes_to_skip_in_loop_closing = 9; // TODO migrate to rosparams
+int keyframes_to_skip_in_loop_closing = 4; // TODO migrate to rosparams
 // #### TUNING CONSTANTS END
 
 void publish_graph() {
