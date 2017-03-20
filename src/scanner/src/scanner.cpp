@@ -4,13 +4,15 @@
 
 // #### TUNING CONSTANTS START
 // Thresholds for voting for keyframe:
-const double converged_fitness_threshold = 999; // [adimensional] TODO migrate to rosparams
+const double fitness_keyframe_threshold = 2; // [adimensional] TODO migrate to rosparams
+const double fitness_loop_threshold = 6; // [adimensional] TODO migrate to rosparams
 const double distance_threshold = 1; // [m] TODO migrate to rosparams
 const double rotation_threshold = 1; // [rad] TODO migrate to rosparams
 const unsigned int loop_closure_skip = 5;
 
 // Uncertainty model constants
 const double k_disp_disp = 0.001, k_rot_disp = 0.001, k_rot_rot = 0.001; // TODO migrate to rosparams
+const double sigma_xy = 0.2, sigma_th = 0.1; // TODO migrate to rosparams
 // #### TUNING CONSTANTS END
 
 ros::Publisher registration_pub;
@@ -62,7 +64,7 @@ std::string convergence_text(pcl::registration::DefaultConvergenceCriteria<float
 
 bool vote_for_keyframe(const common::Pose2DWithCovariance Delta, const double fitness)
 {
-    if (fitness > converged_fitness_threshold) // fitness
+    if (fitness > fitness_keyframe_threshold) // fitness
         return true;
     if (fabs(Delta.pose.theta) > rotation_threshold) // rotation
         return true;
@@ -98,7 +100,7 @@ Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_ms
         // Get transformation Delta and compute its covariance
         output.transform = transform;
         geometry_msgs::Pose2D transform_Delta = make_Delta(transform);
-        Eigen::MatrixXd covariance_Delta = compute_covariance(k_disp_disp, k_rot_disp, k_rot_rot, transform_Delta);
+        Eigen::MatrixXd covariance_Delta = compute_covariance(sigma_xy, sigma_th);
         output.Delta = create_Pose2DWithCovariance_msg(transform_Delta, covariance_Delta);
     }
 
@@ -163,17 +165,19 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
         output.factor_new.id_2          = output.keyframe_new.id;
         output.factor_new.delta         = alignement_last.Delta;
 
-        // Check for loop closures only if on Keyframes
+        // Keyframe creation
         if (output.keyframe_flag)
         {
-        	ROS_INFO("RG: align time: %f", end - start);
+        	ROS_INFO("RG: align time: %f; fitness: %f", end - start, alignement_last.fitness);
             ROS_INFO_STREAM("RG: convergence state: " << convergence_text(alignement_last.convergence_state)); //convergence_text(alignement_loop.convergence_state));
             ROS_INFO("RG: Delta: %f %f %f", alignement_last.Delta.pose.x, alignement_last.Delta.pose.y, alignement_last.Delta.pose.theta);
             carry_transform.setIdentity();
 
+            // Check for loop closures only if on Keyframes
             loop_closure_skip_count++;
-            if ((loop_closure_skip_count % loop_closure_skip) == 0) // only try once in a while
+            if (loop_closure_skip_count >= loop_closure_skip) // only try once in a while
             {
+                loop_closure_skip_count = 0;
 
                 // request closest KF
                 common::ClosestKeyframe keyframe_closest_request;
@@ -198,20 +202,17 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
                     end = ros::Time::now().toSec();
 
                     // print some stuff
-                    ROS_INFO("LC: align time: %f", end - start);
+                    ROS_INFO("LC: align time: %f; fitness: %f", end - start, alignement_loop.fitness);
                     ROS_INFO_STREAM("LC: convergence state: " << convergence_text(alignement_loop.convergence_state));
                     ROS_INFO("LC: Delta: %f %f %f", alignement_loop.Delta.pose.x, alignement_loop.Delta.pose.y, alignement_loop.Delta.pose.theta);
 
                     // compose output message
-                    output.loop_closure_flag        = alignement_loop.converged;
-                    if (alignement_loop.converged)
-                    {
-                        output.keyframe_last        = keyframe_last_request.response.keyframe_last;
-                        output.keyframe_loop        = keyframe_closest_request.response.keyframe_closest;
-                        output.factor_loop.id_1     = keyframe_last_request.response.keyframe_last.id;
-                        output.factor_loop.id_2     = keyframe_closest_request.response.keyframe_closest.id;
-                        output.factor_loop.delta    = alignement_loop.Delta;
-                    }
+                    output.loop_closure_flag    = (alignement_loop.converged && alignement_loop.fitness < fitness_loop_threshold);
+                    output.keyframe_last        = keyframe_last_request.response.keyframe_last;
+                    output.keyframe_loop        = keyframe_closest_request.response.keyframe_closest;
+                    output.factor_loop.id_1     = keyframe_last_request.response.keyframe_last.id;
+                    output.factor_loop.id_2     = keyframe_closest_request.response.keyframe_closest.id;
+                    output.factor_loop.delta    = alignement_loop.Delta;
 
                 } // keyframe closest returned
             } // loop closure skip count
@@ -247,8 +248,6 @@ int main(int argc, char** argv) {
   gicp.setTransformationEpsilon(1e-8); // ICP example 1e-8
   gicp.setEuclideanFitnessEpsilon(0.1); // ICP example 1
 
-  // Setup GICP algorithm
-  //    gicp.setMaximumOptimizerIterations(50);
 
   // Spy ICP convergence criteria:
   ROS_INFO("ICP: max iter sim transf: %d", gicp.getConvergeCriteria()->getMaximumIterationsSimilarTransforms());
