@@ -1,4 +1,5 @@
-#include <scanner.hpp>
+#include "../../common/include/utils.hpp"
+#include "scanner.hpp"
 #include <iostream>
 
 // #### TUNING CONSTANTS START

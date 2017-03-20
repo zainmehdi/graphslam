@@ -1,4 +1,5 @@
 #include <graph.hpp>
+#include "../../common/include/utils.hpp"
 #include <common/Factor.h>
 #include <common/Graph.h>
 
