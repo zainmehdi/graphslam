@@ -1,6 +1,6 @@
 #include <nav_msgs/Odometry.h>
 #include <ICP.h>
-#include "../include/utils.hpp"
+#include "utils.hpp"
 
 ros::Publisher delta_pub;
 

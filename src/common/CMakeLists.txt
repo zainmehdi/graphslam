@@ -6,8 +6,8 @@ add_definitions(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   tf
   nav_msgs
-  pcl_ros
-  pcl_conversions
+#  pcl_ros
+#  pcl_conversions
   laser_geometry
   cmake_modules
   roscpp
@@ -47,23 +47,23 @@ generate_messages(
   )
 
 catkin_package(
-  DEPENDS message_runtime
+#  DEPENDS message_runtime
   )
 
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
   )
 
 add_executable(markers src/markers.cpp)
 target_link_libraries(markers ${catkin_LIBRARIES})
 add_dependencies(markers common_gencpp)
 
-add_executable(gicp src/gicp.cpp)
-target_link_libraries(gicp ${catkin_LIBRARIES})
-add_dependencies(gicp common_gencpp)
-
+#add_executable(gicp src/gicp.cpp)
+#target_link_libraries(gicp ${catkin_LIBRARIES})
+#add_dependencies(gicp common_gencpp)
+#
 #add_executable(sparseicp src/sparseicp.cpp)
 #target_link_libraries(sparseicp ${catkin_LIBRARIES})
 #add_dependencies(sparseicp common_gencpp)

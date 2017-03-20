@@ -1,5 +1,6 @@
 #include <nav_msgs/Odometry.h>
-#include "../include/utils.hpp"
+#include "scanner.hpp"
+#include "utils.hpp"
 
 ros::Publisher delta_pub;
 
@@ -15,24 +16,24 @@ sensor_msgs::LaserScan robot_1_laserscan;
 nav_msgs::Odometry robot_1_gt;
 nav_msgs::Odometry robot_0_gt;
 
-common::Pose2DWithCovariance between(const common::Pose2DWithCovariance& start_pose,
-                        const common::Pose2DWithCovariance& end_pose) {
-  common::Pose2DWithCovariance transform;
-  double t_start_th = start_pose.pose.theta;
-  double t_end_th = end_pose.pose.theta;
-  double cos_th = cos ( t_start_th );
-  double sin_th = sin ( t_start_th );
-  double dx = end_pose.pose.x - start_pose.pose.x;
-  double dy = end_pose.pose.y - start_pose.pose.y;
-  double dth = t_end_th - t_start_th;
-  dth = std::fmod( dth + M_PI, 2 * M_PI ) - M_PI;
-  transform.pose.x = ( cos_th * dx ) + ( sin_th * dy );
-  transform.pose.y = ( -1 * sin_th * dx ) + ( cos_th * dy );
-  transform.pose.theta = dth;
-
-  return transform;
-
-}
+//common::Pose2DWithCovariance between(const common::Pose2DWithCovariance& start_pose,
+//                        const common::Pose2DWithCovariance& end_pose) {
+//  common::Pose2DWithCovariance transform;
+//  double t_start_th = start_pose.pose.theta;
+//  double t_end_th = end_pose.pose.theta;
+//  double cos_th = cos ( t_start_th );
+//  double sin_th = sin ( t_start_th );
+//  double dx = end_pose.pose.x - start_pose.pose.x;
+//  double dy = end_pose.pose.y - start_pose.pose.y;
+//  double dth = t_end_th - t_start_th;
+//  dth = std::fmod( dth + M_PI, 2 * M_PI ) - M_PI;
+//  transform.pose.x = ( cos_th * dx ) + ( sin_th * dy );
+//  transform.pose.y = ( -1 * sin_th * dx ) + ( cos_th * dy );
+//  transform.pose.theta = dth;
+//
+//  return transform;
+//
+//}
 
 void gicp_register(sensor_msgs::PointCloud2 input_1,
 				   sensor_msgs::PointCloud2 input_2,

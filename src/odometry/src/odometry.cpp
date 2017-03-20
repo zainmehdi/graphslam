@@ -10,6 +10,8 @@
 
 #include <geometry_msgs/Twist.h>
 
+#include "utils.hpp"
+
 // JS: David, I guess this file is the result of a copypaste from HW1.
 // There are many things not needed, and I would like to use the logic explained in the Drive document
 // Therefore I have put many messages here, with indications.
@@ -23,44 +25,44 @@ double k_d_d = 0.1, k_r_d = 0.1, k_r_r = 0.1; // TODO migrate to rosparams
 //, Delta_x, Delta_y, Delta_th; // JS: We do not need Delta
 std::deque<common::Odometry> buffer_odom; // JS: changed vector --> deque for an efficient pop_front().
 
-common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y, double th, Eigen::MatrixXd m) {
-  common::Pose2DWithCovariance output;
-
-  output.pose.x = x;
-  output.pose.y = y;
-  output.pose.theta = th;
-  
-  for(int i = 0; i < m.rows(); i++) {
-    for(int j = 0; j < m.cols(); j++) {
-      output.covariance[( i * m.rows() ) + j] = m(i, j);
-    }
-  }
-
-  return output;
-}
-
-// JS: This method is used by more than one node.
-//    -  It should be placed in package 'common'
-//    -  and also renamed to 'between(pose1, pose2)'
-//    -  see the document in Drive !!
-common::Pose2DWithCovariance between(common::Pose2DWithCovariance start_pose,
-					    common::Pose2DWithCovariance end_pose) {
-  common::Pose2DWithCovariance transform;
-  double t_start_th = start_pose.pose.theta;
-  double t_end_th = end_pose.pose.theta;
-  double cos_th = cos ( t_start_th );
-  double sin_th = sin ( t_start_th );
-  double dx = end_pose.pose.x - start_pose.pose.x;
-  double dy = end_pose.pose.y - start_pose.pose.y;
-  double dth = t_end_th - t_start_th;
-  dth = std::fmod( dth + M_PI, 2 * M_PI ) - M_PI;
-  transform.pose.x = ( cos_th * dx ) + ( sin_th * dy );
-  transform.pose.y = ( -1 * sin_th * dx ) + ( cos_th * dy );
-  transform.pose.theta = dth;
-
-  return transform;
-  
-}
+//common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y, double th, Eigen::MatrixXd m) {
+//  common::Pose2DWithCovariance output;
+//
+//  output.pose.x = x;
+//  output.pose.y = y;
+//  output.pose.theta = th;
+//
+//  for(int i = 0; i < m.rows(); i++) {
+//    for(int j = 0; j < m.cols(); j++) {
+//      output.covariance[( i * m.rows() ) + j] = m(i, j);
+//    }
+//  }
+//
+//  return output;
+//}
+//
+//// JS: This method is used by more than one node.
+////    -  It should be placed in package 'common'
+////    -  and also renamed to 'between(pose1, pose2)'
+////    -  see the document in Drive !!
+//common::Pose2DWithCovariance between(common::Pose2DWithCovariance start_pose,
+//					    common::Pose2DWithCovariance end_pose) {
+//  common::Pose2DWithCovariance transform;
+//  double t_start_th = start_pose.pose.theta;
+//  double t_end_th = end_pose.pose.theta;
+//  double cos_th = cos ( t_start_th );
+//  double sin_th = sin ( t_start_th );
+//  double dx = end_pose.pose.x - start_pose.pose.x;
+//  double dy = end_pose.pose.y - start_pose.pose.y;
+//  double dth = t_end_th - t_start_th;
+//  dth = std::fmod( dth + M_PI, 2 * M_PI ) - M_PI;
+//  transform.pose.x = ( cos_th * dx ) + ( sin_th * dy );
+//  transform.pose.y = ( -1 * sin_th * dx ) + ( cos_th * dy );
+//  transform.pose.theta = dth;
+//
+//  return transform;
+//
+//}
 
 void vel_callback(const geometry_msgs::Twist::ConstPtr& input) {
   vx = input->linear.x;

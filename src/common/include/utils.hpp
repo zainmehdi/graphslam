@@ -20,14 +20,14 @@
 #include <common/LastKeyframe.h>
 #include <common/ClosestKeyframe.h>
 
-#include <pcl/io/pcd_io.h>
-#include <pcl/conversions.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/PCLPointCloud2.h>
-#include <pcl_ros/transforms.h>
-#include <pcl/registration/gicp.h>
-#include <pcl_conversions/pcl_conversions.h>
+//#include <pcl_ros/io/pcd_io.h>
+//#include <pcl/conversions.h>
+//#include <pcl/point_cloud.h>
+//#include <pcl/point_types.h>
+//#include <pcl/PCLPointCloud2.h>
+//#include <pcl_ros/transforms.h>
+//#include <pcl/registration/gicp.h>
+//#include <pcl_conversions/pcl_conversions.h>
 
 common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y, double th, Eigen::MatrixXd Q) {
   common::Pose2DWithCovariance output;
@@ -90,23 +90,83 @@ Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_
   return Q;
 }
 
-sensor_msgs::PointCloud2 scan_to_pointcloud(sensor_msgs::LaserScan input) {
+//sensor_msgs::PointCloud2 scan_to_pointcloud(sensor_msgs::LaserScan input) {
+//
+//  laser_geometry::LaserProjection projector;
+//  sensor_msgs::PointCloud2 output;
+//  projector.projectLaser(input, output);
+//
+//  return output;
+//}
+//
+//pcl::PointCloud<pcl::PointXYZ>::Ptr format_pointcloud(sensor_msgs::PointCloud2 input) {
+//
+//  pcl::PCLPointCloud2 pcl2_pointcloud;
+//  pcl_conversions::toPCL(input, pcl2_pointcloud);
+//
+//  pcl::PointCloud<pcl::PointXYZ>::Ptr output(new pcl::PointCloud<pcl::PointXYZ>);
+//  pcl::fromPCLPointCloud2(pcl2_pointcloud, *output);
+//
+//  return output;
+//}
 
-  laser_geometry::LaserProjection projector;
-  sensor_msgs::PointCloud2 output;
-  projector.projectLaser(input, output);
+common::Pose2DWithCovariance compose(common::Pose2DWithCovariance pose, common::Pose2DWithCovariance delta) {
+  common::Pose2DWithCovariance output;
+  double cos_th = cos( pose.pose.theta );
+  double sin_th = sin( pose.pose.theta );
+
+  // Help: composition is:
+  //    pose_xy = pose_xy + R(pose.th) * delta_xy; with R(th) = [cos(th) -sin(th); sin(th) cos(th)]
+  //    pose_th = pose_th + delta.th;
+  output.pose.x = pose.pose.x + ( cos_th * delta.pose.x  +  -sin_th * delta.pose.y );
+  output.pose.y = pose.pose.y + ( sin_th * delta.pose.x  +   cos_th * delta.pose.y );
+  output.pose.theta = pose.pose.theta + delta.pose.theta;
+  output.pose.theta = std::fmod(output.pose.theta + M_PI, 2 * M_PI) - M_PI;
 
   return output;
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr format_pointcloud(sensor_msgs::PointCloud2 input) {
+common::Pose2DWithCovariance between(common::Pose2DWithCovariance pose_1, common::Pose2DWithCovariance pose_2) {
+  common::Pose2DWithCovariance output;
+  double cos_th = cos( pose_1.pose.theta );
+  double sin_th = sin( pose_1.pose.theta );
 
-  pcl::PCLPointCloud2 pcl2_pointcloud;
-  pcl_conversions::toPCL(input, pcl2_pointcloud);
-
-  pcl::PointCloud<pcl::PointXYZ>::Ptr output(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::fromPCLPointCloud2(pcl2_pointcloud, *output);
+  // Help: composition is:
+  //    delta_xy = R(pose1.th).transposed * (pose2_xy - pose1_xy); with R(th) = [cos(th) -sin(th); sin(th) cos(th)]
+  //    delta_th = pose2_th - pose1.th;
+  double dx = pose_2.pose.x - pose_1.pose.x;
+  double dy = pose_2.pose.y - pose_1.pose.y;
+  output.pose.x = (  cos_th * dx  + sin_th * dy );
+  output.pose.y = ( -sin_th * dx  + cos_th * dy );
+  output.pose.theta = pose_2.pose.theta - pose_1.pose.theta;
+  output.pose.theta = std::fmod(output.pose.theta + M_PI, 2 * M_PI) - M_PI;
 
   return output;
 }
+
+Eigen::MatrixXd covariance_to_eigen(common::Factor input) {
+  Eigen::MatrixXd Q(3, 3);
+  Q.row(0) << input.delta.covariance[0],
+    input.delta.covariance[1],
+    input.delta.covariance[2];
+  Q.row(1) << input.delta.covariance[3],
+    input.delta.covariance[4],
+    input.delta.covariance[5];
+  Q.row(2) << input.delta.covariance[6],
+    input.delta.covariance[7],
+    input.delta.covariance[8];
+
+  return Q;
+}
+
+common::Pose2DWithCovariance eigen_to_covariance(common::Pose2DWithCovariance pose, Eigen::MatrixXd Q) {
+  for(int i = 0; i < Q.rows(); i++) {
+    for(int j = 0; j < Q.cols(); j++) {
+      pose.covariance[( i * Q.rows() ) + j] = Q(i, j);
+    }
+  }
+
+  return pose;
+}
+
 
