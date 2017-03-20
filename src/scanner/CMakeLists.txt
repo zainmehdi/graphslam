@@ -21,11 +21,12 @@ catkin_package()
 
 include_directories(
   include
+  ../common/include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
   )
 
 add_executable(scanner src/scanner.cpp)
-target_link_libraries(scanner ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
+target_link_libraries(scanner ${catkin_LIBRARIES})
 add_dependencies(scanner common_gencpp)
 
