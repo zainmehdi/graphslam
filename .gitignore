@@ -32,3 +32,5 @@
 
 devel/*
 build/*
+/.cproject
+/.project
