@@ -38,7 +38,7 @@ common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y,
   if(Q.rows() == 3 && Q.cols() == 3) {
     for(int i = 0; i < Q.rows(); i++) {
       for(int j = 0; j < Q.cols(); j++) {
-	output.covariance[( i * Q.rows() ) + j] = Q(i, j);
+    output.covariance[( i * Q.rows() ) + j] = Q(i, j);
       }
     }
   }
@@ -52,7 +52,7 @@ common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(geometry_msgs::Pose
   return output;
 }
 
-geometry_msgs::Pose2D make_Delta(Eigen::MatrixXf T) {
+geometry_msgs::Pose2D make_Delta(const Eigen::MatrixXf& T) {
   geometry_msgs::Pose2D Delta;
   Delta.x = T(0, 3);
   Delta.y = T(1, 3);
@@ -60,15 +60,29 @@ geometry_msgs::Pose2D make_Delta(Eigen::MatrixXf T) {
   return Delta;
 }
 
+Eigen::Matrix4f make_transform(const geometry_msgs::Pose2D& Delta) {
+    Eigen::Matrix4f transform;
+    transform.setIdentity();
+    float cos_th = cos(Delta.theta);
+    float sin_th = sin(Delta.theta);
+    transform(0,0) = cos_th;
+    transform(0,1) = -sin_th;
+    transform(1,0) = sin_th;
+    transform(1,1) = cos_th;
+    transform(0,3) = Delta.x;
+    transform(1,3) = Delta.y;
+    return transform;
+}
+
 // JS: Isn't it possible to place these functions in a common place for everyone to share?? Like in common/src/ or something? I have made this comment a lot of times :-(
 Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_disp, const double k_rot_rot, geometry_msgs::Pose2D input)
 {
+
   double Dl = sqrt( pow( input.x, 2 ) + pow( input.y, 2) );
   double sigma_xy_squared = k_disp_disp * Dl;
-  double sigma_th_squared = ( k_rot_disp * Dl ) + ( k_rot_rot * input.theta );
+  double sigma_th_squared = ( k_rot_disp * Dl ) + ( k_rot_rot * fabs(input.theta) );
   
   Eigen::MatrixXd Q(3, 3);
-  Q.setZero();
   Q(0, 0) = sigma_xy_squared;
   Q(1, 1) = sigma_xy_squared;
   Q(2, 2) = sigma_th_squared;
