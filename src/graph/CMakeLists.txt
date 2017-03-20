@@ -18,9 +18,10 @@ catkin_package()
 include_directories(
   include
   ../common/include
-  ${EIGEN3_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS})
 
 add_executable(graph src/graph.cpp)
 target_link_libraries(graph ${catkin_LIBRARIES} gtsam)
 add_dependencies(graph common_gencpp)
+

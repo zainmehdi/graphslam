@@ -20,14 +20,14 @@
 #include <common/LastKeyframe.h>
 #include <common/ClosestKeyframe.h>
 
-#include <pcl/io/pcd_io.h>
-#include <pcl/conversions.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/PCLPointCloud2.h>
-#include <pcl_ros/transforms.h>
-#include <pcl/registration/gicp.h>
-#include <pcl_conversions/pcl_conversions.h>
+//#include <pcl_ros/io/pcd_io.h>
+//#include <pcl/conversions.h>
+//#include <pcl/point_cloud.h>
+//#include <pcl/point_types.h>
+//#include <pcl/PCLPointCloud2.h>
+//#include <pcl_ros/transforms.h>
+//#include <pcl/registration/gicp.h>
+//#include <pcl_conversions/pcl_conversions.h>
 
 common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y, double th, Eigen::MatrixXd Q) {
   common::Pose2DWithCovariance output;
@@ -90,25 +90,25 @@ Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_
   return Q;
 }
 
-sensor_msgs::PointCloud2 scan_to_pointcloud(sensor_msgs::LaserScan input) {
-
-  laser_geometry::LaserProjection projector;
-  sensor_msgs::PointCloud2 output;
-  projector.projectLaser(input, output);
-
-  return output;
-}
-
-pcl::PointCloud<pcl::PointXYZ>::Ptr format_pointcloud(sensor_msgs::PointCloud2 input) {
-
-  pcl::PCLPointCloud2 pcl2_pointcloud;
-  pcl_conversions::toPCL(input, pcl2_pointcloud);
-
-  pcl::PointCloud<pcl::PointXYZ>::Ptr output(new pcl::PointCloud<pcl::PointXYZ>);
-  pcl::fromPCLPointCloud2(pcl2_pointcloud, *output);
-
-  return output;
-}
+//sensor_msgs::PointCloud2 scan_to_pointcloud(sensor_msgs::LaserScan input) {
+//
+//  laser_geometry::LaserProjection projector;
+//  sensor_msgs::PointCloud2 output;
+//  projector.projectLaser(input, output);
+//
+//  return output;
+//}
+//
+//pcl::PointCloud<pcl::PointXYZ>::Ptr format_pointcloud(sensor_msgs::PointCloud2 input) {
+//
+//  pcl::PCLPointCloud2 pcl2_pointcloud;
+//  pcl_conversions::toPCL(input, pcl2_pointcloud);
+//
+//  pcl::PointCloud<pcl::PointXYZ>::Ptr output(new pcl::PointCloud<pcl::PointXYZ>);
+//  pcl::fromPCLPointCloud2(pcl2_pointcloud, *output);
+//
+//  return output;
+//}
 
 common::Pose2DWithCovariance compose(common::Pose2DWithCovariance pose, common::Pose2DWithCovariance delta) {
   common::Pose2DWithCovariance output;

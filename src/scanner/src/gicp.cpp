@@ -1,4 +1,5 @@
 #include <nav_msgs/Odometry.h>
+#include "scanner.hpp"
 #include "utils.hpp"
 
 ros::Publisher delta_pub;
