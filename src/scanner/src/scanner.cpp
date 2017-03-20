@@ -177,16 +177,15 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
             loop_closure_skip_count++;
             if (loop_closure_skip_count >= loop_closure_skip) // only try once in a while
             {
-                loop_closure_skip_count = 0;
 
-                // request closest KF
+                // request closest KF to test for loop closure
                 common::ClosestKeyframe keyframe_closest_request;
                 keyframe_closest_request.request.keyframe_last = keyframe_last_request.response.keyframe_last;
                 bool keyframe_closest_request_returned = keyframe_closest_client.call(keyframe_closest_request);
 
                 if (keyframe_closest_request_returned)
                 {
-                    // compute prior transform from 2 keyframes
+                    // compute prior transform between the 2 keyframes
                     Eigen::Matrix4f T_last = make_transform(keyframe_last_request.response.keyframe_last.pose_opti.pose);
                     Eigen::Matrix4f T_loop = make_transform(keyframe_closest_request.response.keyframe_closest.pose_opti.pose);
                     Eigen::Matrix4f loop_transform = T_last.inverse()*T_loop;
@@ -213,6 +212,9 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
                     output.factor_loop.id_1     = keyframe_last_request.response.keyframe_last.id;
                     output.factor_loop.id_2     = keyframe_closest_request.response.keyframe_closest.id;
                     output.factor_loop.delta    = alignement_loop.Delta;
+
+                    if (output.loop_closure_flag)
+                        loop_closure_skip_count = 0;
 
                 } // keyframe closest returned
             } // loop closure skip count
