@@ -5,9 +5,8 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Odometry1
-        - /PoseArray1
       Splitter Ratio: 0.550287366
-    Tree Height: 747
+    Tree Height: 359
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -120,6 +119,14 @@ Visualization Manager:
         loop_points_and_lines: true
       Queue Size: 100
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /scan_marker
+      Name: Marker
+      Namespaces:
+        keyframe_points_and_lines: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -144,24 +151,24 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 8.21447468
+      Distance: 24.7834263
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.881961763
-        Y: 1.2731564
-        Z: 0.311668783
+        X: -0.686970472
+        Y: 1.20994139
+        Z: 0.309869647
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.910397947
+      Pitch: 1.54479635
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.90358782
+      Yaw: 4.70858335
     Saved: ~
 Window Geometry:
   Displays:

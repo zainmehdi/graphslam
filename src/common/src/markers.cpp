@@ -9,10 +9,12 @@
 #include <geometry_msgs/Pose2D.h>
 #include <tf/transform_broadcaster.h>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 geometry_msgs::PoseArray pose_optis;
 visualization_msgs::Marker keyframe_points, keyframe_line_strip; //, keyframe_line_list;
 visualization_msgs::Marker loop_points, loop_line_list;
+visualization_msgs::Marker scan_marker_point;
 
 void graph_callback(const common::Graph& input) {
   pose_optis.poses.clear();
@@ -20,10 +22,11 @@ void graph_callback(const common::Graph& input) {
   keyframe_line_strip.points.clear();
   loop_points.points.clear();
   loop_line_list.points.clear();
+  scan_marker_point.points.clear();
   
   // loop all keyframes
   for(int i = 0; i < input.keyframes.size(); i++) {
-      // create pose
+    // create pose
     geometry_msgs::Pose pose;
     pose.position.x = input.keyframes[i].pose_opti.pose.x;
     pose.position.y = input.keyframes[i].pose_opti.pose.y;
@@ -81,6 +84,19 @@ void graph_callback(const common::Graph& input) {
       }
     }
   }
+
+  
+  for(int i = 0; i < input.keyframes.size(); i++) {
+    for(int j = 0; j < input.keyframes[i].scan.ranges.size(); j+=25) {
+      geometry_msgs::Point pnt;
+      double th = std::fmod(input.keyframes[i].pose_opti.pose.theta +
+			    input.keyframes[i].scan.angle_min +
+       			    ( j * input.keyframes[i].scan.angle_increment ) + M_PI, 2 * M_PI ) - M_PI;
+      pnt.x = input.keyframes[i].pose_opti.pose.x + ( input.keyframes[i].scan.ranges[j] * cos( th ) );
+      pnt.y = input.keyframes[i].pose_opti.pose.y + ( input.keyframes[i].scan.ranges[j] * sin( th ) );
+      scan_marker_point.points.push_back(pnt);
+    }
+  }
 }
 
 int main( int argc, char** argv ) {
@@ -89,6 +105,7 @@ int main( int argc, char** argv ) {
   ros::Rate(100);
   ros::Publisher keyframe_marker_pub = n.advertise<visualization_msgs::Marker>("keyframe_marker", 50);
   ros::Publisher loop_marker_pub = n.advertise<visualization_msgs::Marker>("loop_marker", 50);
+  ros::Publisher scan_marker_point_pub = n.advertise<visualization_msgs::Marker>("scan_marker", 50);
   ros::Publisher pose_array_pub = n.advertise<geometry_msgs::PoseArray>("/keyframe/poses", 50);
   ros::Subscriber graph_sub = n.subscribe("/graph/graph", 1, graph_callback);
 
@@ -108,6 +125,20 @@ int main( int argc, char** argv ) {
   keyframe_points.header.stamp = ros::Time::now();
   keyframe_points.ns = "keyframe_points_and_lines";
   keyframe_points.pose.orientation.w = 1.0;
+
+  // scan point position markers
+  scan_marker_point.id = 0;
+  scan_marker_point.type = visualization_msgs::Marker::POINTS;
+  scan_marker_point.action = visualization_msgs::Marker::ADD;
+  scan_marker_point.scale.x = 0.1;
+  scan_marker_point.scale.y = 0.1;
+  scan_marker_point.scale.z = 0.1;
+  scan_marker_point.color.g = 1.0f;
+  scan_marker_point.color.a = 1.0;
+  scan_marker_point.header.frame_id = "odom";
+  scan_marker_point.header.stamp = ros::Time::now();
+  scan_marker_point.ns = "keyframe_points_and_lines";
+  scan_marker_point.pose.orientation.w = 1.0;
 
   // Motion factor segments
   keyframe_line_strip.id = 1;
@@ -152,6 +183,7 @@ int main( int argc, char** argv ) {
   
   while(ros::ok()) {
     pose_array_pub.publish(pose_optis);
+    scan_marker_point_pub.publish(scan_marker_point);
     keyframe_marker_pub.publish(keyframe_points);
     loop_marker_pub.publish(loop_points);
     keyframe_marker_pub.publish(keyframe_line_strip);
