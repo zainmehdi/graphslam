@@ -83,6 +83,7 @@ Eigen::Matrix4f make_transform(const geometry_msgs::Pose2D& Delta) {
 Eigen::MatrixXd compute_covariance(const double sigma_xy, const double sigma_th)
 {
     Eigen::MatrixXd Q(3, 3);
+    Q.setZero();
     Q(0, 0) = Q(1, 1) = sigma_xy * sigma_xy;
 //    Q(1, 1) = sigma_xy * sigma_xy;
     Q(2, 2) = sigma_th * sigma_th;
@@ -101,6 +102,7 @@ Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_
   double sigma_th_squared = ( k_rot_disp * Dl ) + ( k_rot_rot * fabs(input.theta) );
   
   Eigen::MatrixXd Q(3, 3);
+  Q.setZero();
   Q(0, 0) = sigma_xy_squared;
   Q(1, 1) = sigma_xy_squared;
   Q(2, 2) = sigma_th_squared;
@@ -152,17 +154,9 @@ common::Pose2DWithCovariance between(common::Pose2DWithCovariance pose_1, common
   return output;
 }
 
-Eigen::MatrixXd covariance_to_eigen(common::Factor input) {
-  Eigen::MatrixXd Q(3, 3);
-  Q.row(0) << input.delta.covariance[0],
-    input.delta.covariance[1],
-    input.delta.covariance[2];
-  Q.row(1) << input.delta.covariance[3],
-    input.delta.covariance[4],
-    input.delta.covariance[5];
-  Q.row(2) << input.delta.covariance[6],
-    input.delta.covariance[7],
-    input.delta.covariance[8];
+Eigen::MatrixXd covariance_to_eigen(common::Factor::_delta_type::_covariance_type cov) {
+
+  Eigen::Matrix3d Q = Eigen::Matrix3d(&(cov[0]));
 
   return Q;
 }

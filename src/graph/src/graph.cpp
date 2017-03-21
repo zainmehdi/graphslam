@@ -101,7 +101,7 @@ void motion_factor(common::Registration input) {
 
   // Define new factor
   input.factor_new.id_2 = input.keyframe_new.id;
-  Eigen::MatrixXd Q = covariance_to_eigen(input.factor_new);
+  Eigen::MatrixXd Q = covariance_to_eigen(input.factor_new.delta.covariance);
   gtsam::noiseModel::Gaussian::shared_ptr noise_delta = gtsam::noiseModel::Gaussian::Covariance(Q);
 
   // Add factor and state to the graph
@@ -117,7 +117,6 @@ void motion_factor(common::Registration input) {
   factors.push_back(factor);
 
   // print debug info
-//  ROS_INFO("Edge pushed %d % d", factor.id_1, factor.id_2);
   ROS_INFO("MOTION FACTOR %d-->%d. %lu KFs, %lu Factors, %lu Loops",
 	   input.factor_new.id_1, input.factor_new.id_2, keyframes.size(), graph.nrFactors(), graph.nrFactors() - keyframes.size());
 }
@@ -129,7 +128,7 @@ void loop_factor(common::Registration input)
 {
 
     // Define new factor
-    Eigen::MatrixXd Q = covariance_to_eigen(input.factor_loop);
+    Eigen::MatrixXd Q = covariance_to_eigen(input.factor_loop.delta.covariance);
     gtsam::noiseModel::Gaussian::shared_ptr noise_delta = gtsam::noiseModel::Gaussian::Covariance(Q);
 
     // Add factor to the graph
