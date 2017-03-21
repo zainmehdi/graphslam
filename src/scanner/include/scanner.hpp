@@ -29,7 +29,9 @@
 #include <pcl/registration/gicp.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-
+/**
+ * \brief convert ROS LaserScan message to ROS pointcloud
+ */
 sensor_msgs::PointCloud2 scan_to_pointcloud(sensor_msgs::LaserScan input) {
 
   laser_geometry::LaserProjection projector;
@@ -39,6 +41,9 @@ sensor_msgs::PointCloud2 scan_to_pointcloud(sensor_msgs::LaserScan input) {
   return output;
 }
 
+/**
+ * \brief convert ROS pointcloud to PCL pointcloud
+ */
 pcl::PointCloud<pcl::PointXYZ>::Ptr format_pointcloud(sensor_msgs::PointCloud2 input) {
 
   pcl::PCLPointCloud2 pcl2_pointcloud;

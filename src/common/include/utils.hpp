@@ -20,7 +20,9 @@
 #include <common/LastKeyframe.h>
 #include <common/ClosestKeyframe.h>
 
-
+/**
+ * \brief Create a Pose2DWithCovariance message from numeric input
+ */
 common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y, double th, Eigen::MatrixXd Q) {
   common::Pose2DWithCovariance output;
   output.pose.x = x;
@@ -38,12 +40,18 @@ common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y,
   return output;
 }
 
+/**
+ * \brief Create a Pose2DWithCovariance message from numeric input
+ */
 common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(geometry_msgs::Pose2D pose, Eigen::MatrixXd Q) {
   common::Pose2DWithCovariance output = create_Pose2DWithCovariance_msg(pose.x, pose.y, pose.theta, Q);
   
   return output;
 }
 
+/**
+ * \brief Convert a 3D matrix transform to a 2D Delta
+ */
 geometry_msgs::Pose2D make_Delta(const Eigen::MatrixXf& T) {
   geometry_msgs::Pose2D Delta;
   Delta.x = T(0, 3);
@@ -52,6 +60,9 @@ geometry_msgs::Pose2D make_Delta(const Eigen::MatrixXf& T) {
   return Delta;
 }
 
+/**
+ * \brief Convert a 2D Delta to a 3D matrix transform
+ */
 Eigen::Matrix4f make_transform(const geometry_msgs::Pose2D& Delta) {
     Eigen::Matrix4f transform;
     transform.setIdentity();
@@ -66,6 +77,9 @@ Eigen::Matrix4f make_transform(const geometry_msgs::Pose2D& Delta) {
     return transform;
 }
 
+/**
+ * \brief Create covariance from sigmas
+ */
 Eigen::MatrixXd compute_covariance(const double sigma_xy, const double sigma_th)
 {
     Eigen::MatrixXd Q(3, 3);
@@ -75,16 +89,17 @@ Eigen::MatrixXd compute_covariance(const double sigma_xy, const double sigma_th)
 
     return Q;
 }
+
+/**
+ * \brief Create covariance from Delta
+ */
 Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_disp, const double k_rot_rot, geometry_msgs::Pose2D input)
 {
 
-//  double Dl = sqrt( pow( input.x, 2 ) + pow( input.y, 2) );
-//  double sigma_xy_squared = k_disp_disp * Dl;
-//  double sigma_th_squared = ( k_rot_disp * Dl ) + ( k_rot_rot * fabs(input.theta) );
+  double Dl = sqrt( pow( input.x, 2 ) + pow( input.y, 2) );
+  double sigma_xy_squared = k_disp_disp * Dl;
+  double sigma_th_squared = ( k_rot_disp * Dl ) + ( k_rot_rot * fabs(input.theta) );
   
-  double sigma_xy_squared = 0.2*0.2;
-  double sigma_th_squared = 0.1*0.1;
-
   Eigen::MatrixXd Q(3, 3);
   Q(0, 0) = sigma_xy_squared;
   Q(1, 1) = sigma_xy_squared;
@@ -93,7 +108,11 @@ Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_
   return Q;
 }
 
-
+/**
+ * \brief Compose two 2D poses additively.
+ *
+ * This corresponds to Pose_end = Pose_init (+) Delta
+ */
 common::Pose2DWithCovariance compose(common::Pose2DWithCovariance pose, common::Pose2DWithCovariance delta) {
   common::Pose2DWithCovariance output;
   double cos_th = cos( pose.pose.theta );
@@ -110,6 +129,11 @@ common::Pose2DWithCovariance compose(common::Pose2DWithCovariance pose, common::
   return output;
 }
 
+/**
+ * \brief Compute pose increment or Delta.
+ *
+ * This corresponds to Delta = Pose_end (-) Pose_init
+ */
 common::Pose2DWithCovariance between(common::Pose2DWithCovariance pose_1, common::Pose2DWithCovariance pose_2) {
   common::Pose2DWithCovariance output;
   double cos_th = cos( pose_1.pose.theta );

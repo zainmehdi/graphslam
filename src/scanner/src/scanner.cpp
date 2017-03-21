@@ -22,7 +22,9 @@ ros::ServiceClient keyframe_last_client;
 ros::ServiceClient keyframe_closest_client;
 
 // GICP algorithm
-// alignement output
+/**
+ * \brief Alignement output
+ */
 struct Alignement{
         bool converged;
         float fitness;
@@ -39,6 +41,9 @@ unsigned int loop_closure_skip_count;
 
 // Helper functions
 
+/**
+ * \brief Create a human-readable text for the convergence criteria
+ */
 std::string convergence_text(pcl::registration::DefaultConvergenceCriteria<float>::ConvergenceState state)
 {
     std::string text;
@@ -61,7 +66,9 @@ std::string convergence_text(pcl::registration::DefaultConvergenceCriteria<float
     return text;
 }
 
-
+/**
+ * \brief Policy for creating keyframes
+ */
 bool vote_for_keyframe(const common::Pose2DWithCovariance Delta, const double fitness)
 {
     if (fitness > fitness_keyframe_threshold) // fitness
@@ -74,6 +81,11 @@ bool vote_for_keyframe(const common::Pose2DWithCovariance Delta, const double fi
     return false;
 }
 
+/**
+ * \brief Align two pointclouds, with transform prior.
+ *
+ * Format the results in a compact structure `Alignement`
+ */
 Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2, Eigen::Matrix4f& transform){
 
     // assign inputs
@@ -107,6 +119,11 @@ Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_ms
     return output;
 }
 
+/**
+ * \brief Align two pointclouds, without transform prior.
+ *
+ * Format the results in a compact structure `Alignement`
+ */
 Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_msgs::PointCloud2 input_2){
     Eigen::Matrix4f guess_null(Eigen::Matrix4f::Identity());
     return gicp_register(input_1, input_2, guess_null);
@@ -116,6 +133,16 @@ Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_ms
 
 // Node functions
 
+/**
+ * \brief Callback at the reception of a laser scan
+ *
+ * This function performs all the logic of this node. It decides whether:
+ *   - The first keyframe is to be created,
+ *   - A new keyframe is to be created
+ *   - A loop closure is to be searched and created
+ *
+ * It publishes all the results in a unique `Registration` message.
+ */
 void scanner_callback(const sensor_msgs::LaserScan& input)
 {
 
@@ -226,6 +253,13 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
 
 }
 
+/**
+ * \brief Main process
+ *
+ * Initialize all services, subscribers and publishers.
+ *
+ * Initialize and setup the ICP alignment algorithm
+ */
 int main(int argc, char** argv) {
   ros::init(argc, argv, "scanner");
   ros::NodeHandle n;
