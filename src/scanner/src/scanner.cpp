@@ -293,9 +293,13 @@ int main(int argc, char** argv) {
   ROS_INFO("ICP: rot th  : %f [rad]", acos(gicp.getConvergeCriteria()->getRotationThreshold()));
   ROS_INFO("ICP: trans th: %f [m]", sqrt(gicp.getConvergeCriteria()->getTranslationThreshold()));
   ROS_INFO("ICP: max iter: %d ", gicp.getConvergeCriteria()->getMaximumIterations());
+  ROS_INFO("ICP: RANSAC iter: %d ", int(gicp.getRANSACIterations()));
 
   gicp.getConvergeCriteria()->setMaximumIterationsSimilarTransforms(10);
   ROS_INFO("ICP: max iter sim transf: %d", gicp.getConvergeCriteria()->getMaximumIterationsSimilarTransforms());
+
+  //  gicp.setRANSACIterations(10);
+  //  ROS_INFO("ICP: RANSAC iter: %d ", int(gicp.getRANSACIterations()));
 
   //  gicp.getConvergeCriteria()->setFailureAfterMaximumIterations(true);
   //  ROS_INFO("ICP: fail after max iter: %d ", gicp.getConvergeCriteria()->getFailureAfterMaximumIterations());
