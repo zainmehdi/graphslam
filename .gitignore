@@ -34,3 +34,8 @@ devel/*
 build/*
 /.cproject
 /.project
+/.settings/
+/build/
+/devel/
+/.catkin_workspace
+/.gitignore
