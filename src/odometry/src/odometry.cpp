@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "odometry");
   ros::NodeHandle n;
 
-  ros::Subscriber vel_sub = n.subscribe("/cmd_vel", 1, vel_callback);
+  ros::Subscriber vel_sub = n.subscribe("/cmd_vel_modified", 1, vel_callback);
 
   ros::Publisher odom_pub = n.advertise<common::Odometry>("/odometry/odometry", 1);
 
