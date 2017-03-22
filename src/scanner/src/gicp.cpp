@@ -1,6 +1,8 @@
 #include <nav_msgs/Odometry.h>
 #include "scanner.hpp"
 #include "utils.hpp"
+#include "../../../devel/include/common/Pose2DWithCovariance.h"
+//#include "Pose2DWithCovariance.h"
 
 ros::Publisher delta_pub;
 
@@ -16,31 +18,12 @@ sensor_msgs::LaserScan robot_1_laserscan;
 nav_msgs::Odometry robot_1_gt;
 nav_msgs::Odometry robot_0_gt;
 
-//common::Pose2DWithCovariance between(const common::Pose2DWithCovariance& start_pose,
-//                        const common::Pose2DWithCovariance& end_pose) {
-//  common::Pose2DWithCovariance transform;
-//  double t_start_th = start_pose.pose.theta;
-//  double t_end_th = end_pose.pose.theta;
-//  double cos_th = cos ( t_start_th );
-//  double sin_th = sin ( t_start_th );
-//  double dx = end_pose.pose.x - start_pose.pose.x;
-//  double dy = end_pose.pose.y - start_pose.pose.y;
-//  double dth = t_end_th - t_start_th;
-//  dth = std::fmod( dth + M_PI, 2 * M_PI ) - M_PI;
-//  transform.pose.x = ( cos_th * dx ) + ( sin_th * dy );
-//  transform.pose.y = ( -1 * sin_th * dx ) + ( cos_th * dy );
-//  transform.pose.theta = dth;
-//
-//  return transform;
-//
-//}
-
 void gicp_register(sensor_msgs::PointCloud2 input_1,
 				   sensor_msgs::PointCloud2 input_2,
 				   Eigen::Matrix4f& transform) {
   double start = ros::Time::now().toSec();
-  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = format_pointcloud(input_1);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_2 = format_pointcloud(input_2);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_1 = scanner::format_pointcloud(input_1);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr pointcloud_2 = scanner::format_pointcloud(input_2);
 
   try {
 	gicp.setInputTarget(pointcloud_1);
@@ -56,7 +39,6 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
   ROS_INFO("#############################");
 
   // Ground Truth (GT):
-
   common::Pose2DWithCovariance pose_0, pose_1;
   pose_0.pose.x = robot_0_gt.pose.pose.position.x;
   pose_0.pose.y = robot_0_gt.pose.pose.position.y;
@@ -77,6 +59,7 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
 
   // Print
   ROS_INFO("Converged?: %d, Fitness Score: %f", gicp.hasConverged(), gicp.getFitnessScore());
+  ROS_INFO_STREAM("LC: convergence state: " << scanner::convergence_text(gicp.getConvergeCriteria()->getConvergenceState()));
   ROS_INFO("GT: x0 = %f; y1 = %f; th1 = %f", robot_0_gt.pose.pose.position.x, robot_0_gt.pose.pose.position.y, tf::getYaw(robot_0_gt.pose.pose.orientation));
   ROS_INFO("GT: x1 = %f; y1 = %f; th1 = %f", robot_1_gt.pose.pose.position.x, robot_1_gt.pose.pose.position.y, tf::getYaw(robot_1_gt.pose.pose.orientation));
   ROS_INFO("GT: dx = %f; dy = %f; dth = %f", Delta_01.pose.x, Delta_01.pose.y, Delta_01.pose.theta);
@@ -86,6 +69,7 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
   double end = ros::Time::now().toSec();
   ROS_INFO("Time to Completion: %f seconds", end - start);
   ROS_INFO("#############################");
+
   delta_pub.publish(Delta);
 }
 
@@ -96,28 +80,28 @@ void gicp_register(sensor_msgs::PointCloud2 input_1, sensor_msgs::PointCloud2 in
 
 void robot_0_scanner_callback(const sensor_msgs::LaserScan& input) {
   robot_0_laserscan = input;
-  ROS_INFO("robot_0_laserscan received.");
+//  ROS_INFO("robot_0_laserscan received.");
 }
 
 void robot_1_scanner_callback(const sensor_msgs::LaserScan& input) {
   robot_1_laserscan = input;
-  ROS_INFO("robot_1_laserscan received.");
+//  ROS_INFO("robot_1_laserscan received.");
 }
 
 void robot_0_gt_callback(const nav_msgs::Odometry& input) {
   robot_0_gt = input;
-  ROS_INFO("robot_0_gt received.");
+//  ROS_INFO("robot_0_gt received.");
 }
 
 void robot_1_gt_callback(const nav_msgs::Odometry& input) {
   robot_1_gt = input;
-  ROS_INFO("robot_1_gt received.");
+//  ROS_INFO("robot_1_gt received.");
 }
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "gicp");
   ros::NodeHandle n;
-  ros::Rate r(100);
+  ros::Rate r(1);
 
   ros::Subscriber robot_0_scan_sub = n.subscribe("/robot_0/base_scan", 1, robot_0_scanner_callback);
   ros::Subscriber robot_1_scan_sub = n.subscribe("/robot_1/base_scan", 1, robot_1_scanner_callback);
@@ -128,22 +112,24 @@ int main(int argc, char** argv) {
   // Setup GICP algorithm
   gicp.setUseReciprocalCorrespondences(true);
   gicp.setMaximumIterations(50); // ICP example 50
-  gicp.setMaxCorrespondenceDistance(5); // ICP example 0.05
+  gicp.setMaxCorrespondenceDistance(1); // ICP example 0.05
   gicp.setTransformationEpsilon(1e-8); // ICP example 1e-8
-  gicp.setEuclideanFitnessEpsilon(0.1); // ICP example 1
-  //  gicp.setCorrespondenceRandomness();
-//  gicp.setMaximumOptimizerIterations(50);
+  gicp.setEuclideanFitnessEpsilon(0.01); // ICP example 1
+  gicp.getConvergeCriteria()->setMaximumIterationsSimilarTransforms(10);
   //  gicp.setRotationEpsilon();
+  //  gicp.setCorrespondenceRandomness();
+  //  gicp.setMaximumOptimizerIterations(50);
 
   carry_transform.setIdentity();
   int end = ros::Time::now().toSec() + 3;
 
   while(ros::ok()) {
-    sensor_msgs::PointCloud2 robot_0_pointcloud = scan_to_pointcloud(robot_0_laserscan);
-    sensor_msgs::PointCloud2 robot_1_pointcloud = scan_to_pointcloud(robot_1_laserscan);
+    sensor_msgs::PointCloud2 robot_0_pointcloud = scanner::scan_to_pointcloud(robot_0_laserscan);
+    sensor_msgs::PointCloud2 robot_1_pointcloud = scanner::scan_to_pointcloud(robot_1_laserscan);
 
     if(ros::Time::now().toSec() > end) {
-      gicp_register(robot_0_pointcloud, robot_1_pointcloud);
+      gicp_register(robot_0_pointcloud, robot_1_pointcloud, carry_transform);
+      carry_transform = gicp.getFinalTransformation();
     }
     
     r.sleep();
