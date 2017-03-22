@@ -23,3 +23,20 @@ You will be mostly playing with the robot, tuning some parameters, and investiga
 
     git clone git@github.com:davidswords/GraphSLAM.git
     
+## Execution
+
+In one terminal:
+
+    cd GraphSLAM
+    catkin_make
+    roslaunch common graphSLAM.launch
+    
+In a second terminal
+    
+    rosrun teleop_twist_keyboard teleop_twist_keyboard.py 
+    
+and click 'Z' 9 times to ensure that the angular speed is somwhere close to 0.4 rad/s
+
+Drive your robot and see the trajectory and map being created. If you experience bad results, lower the angular velocity and start over.
+
+
