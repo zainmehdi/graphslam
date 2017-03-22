@@ -17,15 +17,20 @@ find_package(
   Eigen3 REQUIRED
   )
 
-catkin_package()
+catkin_package( DEPENDS pcl_ros pcl_conversions )
 
 include_directories(
   include
+  ../common/include
   ${catkin_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIR}
   )
 
 add_executable(scanner src/scanner.cpp)
-target_link_libraries(scanner ${catkin_LIBRARIES} ${EIGEN_LIBRARIES})
+target_link_libraries(scanner ${catkin_LIBRARIES})
 add_dependencies(scanner common_gencpp)
+
+add_executable(gicp src/gicp.cpp)
+target_link_libraries(gicp ${catkin_LIBRARIES})
+add_dependencies(gicp common_gencpp)
 

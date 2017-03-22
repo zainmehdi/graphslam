@@ -1,4 +1,5 @@
 #include <graph.hpp>
+#include "utils.hpp"
 #include <common/Factor.h>
 #include <common/Graph.h>
 
@@ -8,15 +9,23 @@ double sigma_th_prior = 0.1; // TODO migrate to rosparams
 int keyframes_to_skip_in_loop_closing = 4; // TODO migrate to rosparams
 // #### TUNING CONSTANTS END
 
-gtsam::NonlinearFactorGraph graph;
-gtsam::Values poses_initial;
+//// OK WE START HERE ////
+
+// Our own structures for holding keyframes and factors
 std::vector<common::Keyframe> keyframes; // JS: Better use map<key,Keyframe> where key = ID, as in gtsam::Values
 std::vector<common::Factor> factors;
 int keyframe_IDs; // Simple ID factory for keyframes.
 
+// GTSAM's structures for graph and pose values
+gtsam::NonlinearFactorGraph graph;
+gtsam::Values poses_initial;
+
+// ROS publisher
 ros::Publisher graph_pub;
 
-
+/**
+ * \brief Publish the full graph for others to use.
+ */
 void publish_graph() {
   common::Graph output;
   for(int i = 0; i < keyframes.size(); i++) {
@@ -30,6 +39,11 @@ void publish_graph() {
   graph_pub.publish(output);
 }
 
+/**
+ * \brief Create the first keyframe with a prior factor at the origin.
+ *
+ * In principle, it is called just once at the arrival of the first laser-scan.
+ */
 void prior_factor(common::Registration input) {
 
   // Advance keyframe ID factory
@@ -67,7 +81,10 @@ void prior_factor(common::Registration input) {
 	   input.keyframe_new.id, keyframes.size(), graph.nrFactors());
 } 
 
-void new_factor(common::Registration input) {
+/**
+ * \brief Create a new keyframe and a motion factor from the last keyframe to the new keyframe.
+ */
+void motion_factor(common::Registration input) {
 
   // Advance keyframe ID factory
   keyframe_IDs++;
@@ -84,7 +101,7 @@ void new_factor(common::Registration input) {
 
   // Define new factor
   input.factor_new.id_2 = input.keyframe_new.id;
-  Eigen::MatrixXd Q = covariance_to_eigen(input.factor_new);
+  Eigen::MatrixXd Q = covariance_to_eigen(input.factor_new.delta.covariance);
   gtsam::noiseModel::Gaussian::shared_ptr noise_delta = gtsam::noiseModel::Gaussian::Covariance(Q);
 
   // Add factor and state to the graph
@@ -100,16 +117,18 @@ void new_factor(common::Registration input) {
   factors.push_back(factor);
 
   // print debug info
-//  ROS_INFO("Edge pushed %d % d", factor.id_1, factor.id_2);
   ROS_INFO("MOTION FACTOR %d-->%d. %lu KFs, %lu Factors, %lu Loops",
 	   input.factor_new.id_1, input.factor_new.id_2, keyframes.size(), graph.nrFactors(), graph.nrFactors() - keyframes.size());
 }
 
+/**
+ * \brief Create a loop factor from the last keyframe to another keyframe.
+ */
 void loop_factor(common::Registration input)
 {
 
     // Define new factor
-    Eigen::MatrixXd Q = covariance_to_eigen(input.factor_loop);
+    Eigen::MatrixXd Q = covariance_to_eigen(input.factor_loop.delta.covariance);
     gtsam::noiseModel::Gaussian::shared_ptr noise_delta = gtsam::noiseModel::Gaussian::Covariance(Q);
 
     // Add factor to the graph
@@ -128,6 +147,9 @@ void loop_factor(common::Registration input)
 	     input.factor_loop.id_1, input.factor_loop.id_2, keyframes.size(), graph.nrFactors(), graph.nrFactors() - keyframes.size());
 }
 
+/**
+ * \brief Solve the problem using GTSAM, and update our own SLAM structures.
+ */
 void solve() {
 
   gtsam::Values poses_optimized = gtsam::LevenbergMarquardtOptimizer(graph, poses_initial).optimize();
@@ -147,6 +169,9 @@ void solve() {
   ROS_INFO("SOLVE FINISHED.");
 }
 
+/**
+ * \brief Service providing the last keyframe in the graph
+ */
 bool last_keyframe(common::LastKeyframe::Request &req, common::LastKeyframe::Response &res) {
 
   if(!keyframes.empty()) {
@@ -158,6 +183,12 @@ bool last_keyframe(common::LastKeyframe::Request &req, common::LastKeyframe::Res
   return false;
 }
 
+/**
+ * \brief Service providing the keyframe in the graph that is closest to a given keyframe.
+ *
+ * The function skips from the search a number of keyframes right behind the last keyframe.
+ * This is done to avoid closing loops against the near keyframe history.
+ */
 bool closest_keyframe(common::ClosestKeyframe::Request &req, common::ClosestKeyframe::Response &res) {
 
   if(!keyframes.empty()) {
@@ -192,6 +223,18 @@ bool closest_keyframe(common::ClosestKeyframe::Request &req, common::ClosestKeyf
   return false;
 }
 
+/**
+ * \brief Callback at the reception of a new laser-scan registration.
+ *
+ * This function analyzes the received message and decides whether to create:
+ *   - a first keyframe with a prior factor
+ *   - a new keyframe with a motion factor
+ *   - a loop closure factor
+ *
+ * Each time a loop is created, the problem is solved.
+ *
+ * In any case, the problem's graph is published for others to use.
+ */
 void registration_callback(const common::Registration& input) {
 
   if(input.first_frame_flag) {
@@ -204,7 +247,7 @@ void registration_callback(const common::Registration& input) {
   }
 
   else if(input.keyframe_flag) {
-      new_factor(input);
+      motion_factor(input);
 
       if(input.loop_closure_flag) {
           loop_factor(input);
@@ -220,6 +263,11 @@ void registration_callback(const common::Registration& input) {
 
 }
 
+/**
+ * \brief Main process
+ *
+ * This initializes all services, callbacks and publishers, and the keyframe ID factory.
+ */
 int main(int argc, char** argv) {
   ros::init(argc, argv, "graph");
   ros::NodeHandle n;

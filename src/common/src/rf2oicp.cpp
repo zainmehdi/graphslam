@@ -1,9 +1,9 @@
 #include <nav_msgs/Odometry.h>
-#include "../include/utils.hpp"
+#include "utils.hpp"
 
 ros::Publisher delta_pub;
 
-const double converged_fitness_threshold = 0.5;
+const double fitness_keyframe_threshold = 0.5;
 double k_disp_disp = 0.1, k_rot_disp = 0.1, k_rot_rot = 0.1;
 
 Eigen::Matrix4f carry_transform;
