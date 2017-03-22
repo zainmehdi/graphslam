@@ -35,8 +35,8 @@ In a second terminal
     
     rosrun teleop_twist_keyboard teleop_twist_keyboard.py 
     
-and click 'Z' 9 times to ensure that the angular speed is somwhere close to 0.4 rad/s
+and click 'Z' 9 times to ensure that the angular speed is somwhere close to 0.4 rad/s, or smaller.
 
-Drive your robot and see the trajectory and map being created. If you experience bad results, lower the angular velocity and start over.
+Drive your robot using the teleop keys, and see the trajectory and map being created. If you experience bad results, lower the angular velocity and start over.
 
 
