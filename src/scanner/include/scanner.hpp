@@ -29,6 +29,8 @@
 #include <pcl/registration/gicp.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+namespace scanner {
+
 /**
  * \brief convert ROS LaserScan message to ROS pointcloud
  */
@@ -53,5 +55,44 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr format_pointcloud(sensor_msgs::PointCloud2 i
   pcl::fromPCLPointCloud2(pcl2_pointcloud, *output);
 
   return output;
+}
+
+/**
+ * \brief Alignement output
+ */
+struct Alignement{
+        bool converged;
+        float fitness;
+        pcl::registration::DefaultConvergenceCriteria<float>::ConvergenceState convergence_state;
+        Eigen::Matrix4f transform;
+        common::Pose2DWithCovariance Delta;
+};
+
+
+/**
+ * \brief Create a human-readable text for the convergence criteria
+ */
+std::string convergence_text(pcl::registration::DefaultConvergenceCriteria<float>::ConvergenceState state)
+{
+    std::string text;
+    switch (state){ // defined in default_convergence_criteria.h, line 73
+        case 0:
+            return "Not converged";
+        case 1:
+            return "Ierations";
+        case 2:
+            return "Transform";
+        case 3:
+            return "Abs MSE";
+        case 4:
+            return "Rel MSE";
+        case 5:
+            return "No correspondences ";
+        default:
+            break;
+    }
+    return text;
+}
+
 }
 

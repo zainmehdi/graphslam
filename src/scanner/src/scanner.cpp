@@ -22,17 +22,6 @@ ros::ServiceClient keyframe_last_client;
 ros::ServiceClient keyframe_closest_client;
 
 // GICP algorithm
-/**
- * \brief Alignement output
- */
-struct Alignement{
-        bool converged;
-        float fitness;
-        pcl::registration::DefaultConvergenceCriteria<float>::ConvergenceState convergence_state;
-        Eigen::Matrix4f transform;
-        common::Pose2DWithCovariance Delta;
-};
-
 //pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
 pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> gicp;
 
@@ -41,45 +30,7 @@ unsigned int loop_closure_skip_count;
 
 // Helper functions
 
-/**
- * \brief Create a human-readable text for the convergence criteria
- */
-std::string convergence_text(pcl::registration::DefaultConvergenceCriteria<float>::ConvergenceState state)
-{
-    std::string text;
-    switch (state){ // defined in default_convergence_criteria.h, line 73
-        case 0:
-            return "Not converged";
-        case 1:
-            return "Ierations";
-        case 2:
-            return "Transform";
-        case 3:
-            return "Abs MSE";
-        case 4:
-            return "Rel MSE";
-        case 5:
-            return "No correspondences ";
-        default:
-            break;
-    }
-    return text;
-}
-
-/**
- * \brief Policy for creating keyframes
- */
-bool vote_for_keyframe(const common::Pose2DWithCovariance Delta, const double fitness)
-{
-    if (fitness > fitness_keyframe_threshold) // fitness
-        return true;
-    if (fabs(Delta.pose.theta) > rotation_threshold) // rotation
-        return true;
-    if ((Delta.pose.x*Delta.pose.x+Delta.pose.y*Delta.pose.y) > distance_threshold*distance_threshold) // translation
-        return true;
-
-    return false;
-}
+using namespace scanner;
 
 /**
  * \brief Align two pointclouds, with transform prior.
@@ -129,6 +80,22 @@ Alignement gicp_register(const sensor_msgs::PointCloud2 input_1, const sensor_ms
     return gicp_register(input_1, input_2, guess_null);
 }
 
+
+
+/**
+ * \brief Policy for creating keyframes
+ */
+bool vote_for_keyframe(const common::Pose2DWithCovariance Delta, const double fitness)
+{
+    if (fitness > fitness_keyframe_threshold) // fitness
+        return true;
+    if (fabs(Delta.pose.theta) > rotation_threshold) // rotation
+        return true;
+    if ((Delta.pose.x*Delta.pose.x+Delta.pose.y*Delta.pose.y) > distance_threshold*distance_threshold) // translation
+        return true;
+
+    return false;
+}
 
 
 // Node functions
