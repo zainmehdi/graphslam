@@ -19,8 +19,8 @@ For this, we will do the following:
 
   These parameters are:
   
-    - In scan.cpp:
-      - fitness_keyframe_threshold
+    - In scanner.cpp:
+      - const double fitness_keyframe_threshold
       - const double fitness_loop_threshold
       - const double distance_threshold
       - const double rotation_threshold
