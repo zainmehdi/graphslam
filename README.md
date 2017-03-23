@@ -4,20 +4,22 @@
 
 This is the last practical session of the course. We will be demonstrating graphSLAM on a real robot. 
 
-You will be mostly playing with the robot, tuning some parameters, and investigating some improvements. For this, we will do the following:
-
-1. Start the robot and perform an initial demo run. Explain the main commands and visual rendering that we will use in the experiments.
-
-2. Explore the limits of the current implementation:
+You will be mostly playing with the robot, tuning some parameters, and investigating some improvements. The main goal is to explore the limits of the current implementation, for example:
   - See how fast we can go, or how fast we can turn, before the algorithm shows signs of poor robustness.
   - See how close to the obstacles, or how far, we can go
   - See how often we create keyframes
   - See how often we close loops, and at which distances from other keyframes
-  - See how long we can make a loop and close it successfully. Here, we will try a long loop along a circular corridor, if available.
+  - See how big we can make a loop and close it successfully. Here, we will try a long loop along a circular corridor, if available.
   
-3. Tune the main algorithm parameters. See their effect on the relevant evaluation subjects of point 2. above.
+For this, we will do the following:
 
-4. See if we can improve some parts of the code to obtain better results in point 2. above.
+1. Start the robot and perform an initial run, collecting a couple of rosbags: one easy, one more challenging. We will explain the main commands and visual rendering that we will use in the experiments.
+
+2. Use the rosbags in you own laptops to try to build nice maps. For this, you need to tune the main algorithm parameters. See their effect on the relevant evaluation subjects above.
+
+3. Once you are satisfied with your parameter set, you will be able to try them on the real robot.
+
+4. If time allows, we'll see if we can improve some parts of the code to obtain better results.
 
 ## Installation
 
@@ -43,18 +45,20 @@ Drive your robot using the `teleop` keys, and see the trajectory and map being c
 
 ### With a real pre-acquired rosbag
 
-In one terminal:
+In terminal 1:
 
     $ cd GraphSLAM
     $ catkin_make
-    $ rosbag play subset.bag
 
-In a second terminal:
-
+In terminal 2:
+ 
     $ roscore
     
-In a third terminal:
+In terminal 3:
 
-    $ roslaunch common graphSLAM.launch
+    $ rosbag play subset.bag
 
-### On the real robot:
+In terminal 1:
+
+    $ roslaunch common robot-graphSLAM.launch
+
