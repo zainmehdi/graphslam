@@ -5,9 +5,9 @@
 // #### TUNING CONSTANTS START
 // Thresholds for voting for keyframe:
 const double fitness_keyframe_threshold = 0.5; // [adimensional] TODO migrate to rosparams
-const double fitness_loop_threshold = 1; // [adimensional] TODO migrate to rosparams
-const double distance_threshold = 0.1; // [m] TODO migrate to rosparams
-const double rotation_threshold = .11; // [rad] TODO migrate to rosparams
+const double fitness_loop_threshold = 10; // [adimensional] TODO migrate to rosparams
+const double distance_threshold = 0.5; // [m] TODO migrate to rosparams
+const double rotation_threshold = 0.5; // [rad] TODO migrate to rosparams
 const unsigned int loop_closure_skip = 10;
 
 // Uncertainty model constants
