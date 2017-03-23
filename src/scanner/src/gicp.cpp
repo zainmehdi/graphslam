@@ -59,12 +59,12 @@ void gicp_register(sensor_msgs::PointCloud2 input_1,
 
   // Print
   ROS_INFO("Converged?: %d, Fitness Score: %f", gicp.hasConverged(), gicp.getFitnessScore());
-  ROS_INFO_STREAM("LC: convergence state: " << scanner::convergence_text(gicp.getConvergeCriteria()->getConvergenceState()));
-  ROS_INFO("GT: x0 = %f; y1 = %f; th1 = %f", robot_0_gt.pose.pose.position.x, robot_0_gt.pose.pose.position.y, tf::getYaw(robot_0_gt.pose.pose.orientation));
-  ROS_INFO("GT: x1 = %f; y1 = %f; th1 = %f", robot_1_gt.pose.pose.position.x, robot_1_gt.pose.pose.position.y, tf::getYaw(robot_1_gt.pose.pose.orientation));
+  ROS_INFO_STREAM("RG: convergence state: " << scanner::convergence_text(gicp.getConvergeCriteria()->getConvergenceState()));
+  //  ROS_INFO("GT: x0 = %f; y1 = %f; th1 = %f", robot_0_gt.pose.pose.position.x, robot_0_gt.pose.pose.position.y, tf::getYaw(robot_0_gt.pose.pose.orientation));
+  //  ROS_INFO("GT: x1 = %f; y1 = %f; th1 = %f", robot_1_gt.pose.pose.position.x, robot_1_gt.pose.pose.position.y, tf::getYaw(robot_1_gt.pose.pose.orientation));
   ROS_INFO("GT: dx = %f; dy = %f; dth = %f", Delta_01.pose.x, Delta_01.pose.y, Delta_01.pose.theta);
   ROS_INFO("RG: dx = %f; dy = %f; dth = %f", Delta.pose.x, Delta.pose.y, Delta.pose.theta);
-  ROS_INFO("RG: sx = %f; sy = %f; sth = %f", sqrt(Delta.covariance[0]), sqrt(Delta.covariance[4]), sqrt(Delta.covariance[8]));
+  //  ROS_INFO("RG: sx = %f; sy = %f; sth = %f", sqrt(Delta.covariance[0]), sqrt(Delta.covariance[4]), sqrt(Delta.covariance[8]));
   ROS_INFO("RG: ex = %f; ey = %f; eth = %f", Delta_err.pose.x, Delta_err.pose.y, Delta_err.pose.theta);
   double end = ros::Time::now().toSec();
   ROS_INFO("Time to Completion: %f seconds", end - start);
