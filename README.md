@@ -24,7 +24,10 @@ For this, we will do the following:
 ## Installation
 
     $ git clone git@github.com:davidswords/GraphSLAM.git
+
+Edit ~/.bashrc: add line `source ~/[...]/graphSLAM/devel/setup.sh`
     
+
 ## Execution
 
 ### With the simulator
@@ -33,6 +36,7 @@ In one terminal:
 
     $ cd GraphSLAM
     $ catkin_make
+    
     $ roslaunch common graphSLAM.launch
     
 In a second terminal
