@@ -17,6 +17,19 @@ For this, we will do the following:
 
 2. Use the rosbags in you own laptops to try to build nice maps. For this, you need to tune the main algorithm parameters. See their effect on the relevant evaluation subjects above.
 
+  These parameters are:
+  
+    - In scan.cpp:
+      - fitness_keyframe_threshold
+      - const double fitness_loop_threshold
+      - const double distance_threshold
+      - const double rotation_threshold
+      - const unsigned int loop_closure_skip
+      - const double sigma_xy, sigma_th
+      
+    - in graph.cpp:
+      - int keyframes_to_skip_in_loop_closing
+
 3. Once you are satisfied with your parameter set, you will be able to try them on the real robot.
 
 4. If time allows, we'll see if we can improve some parts of the code to obtain better results.
