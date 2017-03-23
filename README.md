@@ -21,22 +21,40 @@ You will be mostly playing with the robot, tuning some parameters, and investiga
 
 ## Installation
 
-    git clone git@github.com:davidswords/GraphSLAM.git
+    $ git clone git@github.com:davidswords/GraphSLAM.git
     
 ## Execution
 
+### With the simulator
+
 In one terminal:
 
-    cd GraphSLAM
-    catkin_make
-    roslaunch common graphSLAM.launch
+    $ cd GraphSLAM
+    $ catkin_make
+    $ roslaunch common graphSLAM.launch
     
 In a second terminal
     
-    rosrun teleop_twist_keyboard teleop_twist_keyboard.py 
+    $ rosrun teleop_twist_keyboard teleop_twist_keyboard.py 
     
 and click `Z` and/or `C` 9 times to ensure that the angular speed is somewhere close to 0.4 rad/s, or smaller.
 
 Drive your robot using the `teleop` keys, and see the trajectory and map being created. If you experience bad results, lower the angular velocity and start over (you need to start over both the graphSLAM and the teleop processes).
 
+### With a real pre-acquired rosbag
 
+In one terminal:
+
+    $ cd GraphSLAM
+    $ catkin_make
+    $ rosbag play subset.bag
+
+In a second terminal:
+
+    $ roscore
+    
+In a third terminal:
+
+    $ roslaunch common graphSLAM.launch
+
+### On the real robot:
