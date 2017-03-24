@@ -77,5 +77,5 @@ In terminal 1:
 
 In terminal 3:
 
-    $ rosbag play subset.bag
+    $ rosbag play [rosbag file name].bag
 
