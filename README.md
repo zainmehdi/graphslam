@@ -38,7 +38,7 @@ For this, we will do the following:
 
     $ git clone git@github.com:davidswords/GraphSLAM.git
 
-Edit ~/.bashrc: add line `source ~/[...]/graphSLAM/devel/setup.sh`
+Edit ~/.bashrc: add line `source ~/[...]/GraphSLAM/devel/setup.sh`
     
 
 ## Execution
