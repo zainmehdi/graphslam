@@ -22,8 +22,8 @@ For this, we will do the following:
     - In scanner.cpp:
       - const double fitness_keyframe_threshold // fitness limit to make a keyframe
       - const double fitness_loop_threshold     // maximum fitness to accept a loop closure
-      - const double distance_threshold         // maximum distance limit to create a keyframe
-      - const double rotation_threshold         // maximum rotation to create a keyframe
+      - const double distance_threshold         // maximum distance between keyframes
+      - const double rotation_threshold         // maximum rotation between keyframes
       - const unsigned int loop_closure_skip    // number of keyframes after the last loop closure before we start looking for neew loop closures
       - const double sigma_xy, sigma_th         // standard deviations for the factors
       
