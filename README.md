@@ -71,11 +71,11 @@ In terminal 2:
  
     $ roscore
     
-In terminal 3:
-
-    $ rosbag play subset.bag
-
 In terminal 1:
 
     $ roslaunch common robot-graphSLAM.launch
+
+In terminal 3:
+
+    $ rosbag play subset.bag
 
