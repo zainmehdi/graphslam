@@ -23,7 +23,7 @@
 /**
  * \brief Create a Pose2DWithCovariance message from numeric input
  */
-common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y, double th, Eigen::MatrixXd Q) {
+common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y, double th, const Eigen::MatrixXd& Q) {
   common::Pose2DWithCovariance output;
   output.pose.x = x;
   output.pose.y = y;
@@ -43,7 +43,7 @@ common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(double x, double y,
 /**
  * \brief Create a Pose2DWithCovariance message from numeric input
  */
-common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(geometry_msgs::Pose2D pose, Eigen::MatrixXd Q) {
+common::Pose2DWithCovariance create_Pose2DWithCovariance_msg(const geometry_msgs::Pose2D& pose, const Eigen::MatrixXd& Q) {
   common::Pose2DWithCovariance output = create_Pose2DWithCovariance_msg(pose.x, pose.y, pose.theta, Q);
   
   return output;
@@ -94,7 +94,7 @@ Eigen::MatrixXd compute_covariance(const double sigma_xy, const double sigma_th)
 /**
  * \brief Create covariance from Delta
  */
-Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_disp, const double k_rot_rot, geometry_msgs::Pose2D input)
+Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_disp, const double k_rot_rot, const geometry_msgs::Pose2D& input)
 {
 
   double Dl = sqrt( pow( input.x, 2 ) + pow( input.y, 2) );
@@ -115,18 +115,54 @@ Eigen::MatrixXd compute_covariance(const double k_disp_disp, const double k_rot_
  *
  * This corresponds to Pose_end = Pose_init (+) Delta
  */
-common::Pose2DWithCovariance compose(common::Pose2DWithCovariance pose, common::Pose2DWithCovariance delta) {
-  common::Pose2DWithCovariance output;
-  double cos_th = cos( pose.pose.theta );
-  double sin_th = sin( pose.pose.theta );
+geometry_msgs::Pose2D compose(const geometry_msgs::Pose2D& pose, const geometry_msgs::Pose2D& delta) {
+    geometry_msgs::Pose2D output;
+  double cos_th = cos( pose.theta );
+  double sin_th = sin( pose.theta );
 
   // Help: composition is:
   //    pose_xy = pose_xy + R(pose.th) * delta_xy; with R(th) = [cos(th) -sin(th); sin(th) cos(th)]
   //    pose_th = pose_th + delta.th;
-  output.pose.x = pose.pose.x + ( cos_th * delta.pose.x  +  -sin_th * delta.pose.y );
-  output.pose.y = pose.pose.y + ( sin_th * delta.pose.x  +   cos_th * delta.pose.y );
-  output.pose.theta = pose.pose.theta + delta.pose.theta;
-  output.pose.theta = std::fmod(output.pose.theta + M_PI, 2 * M_PI) - M_PI;
+  output.x = pose.x + ( cos_th * delta.x  +  -sin_th * delta.y );
+  output.y = pose.y + ( sin_th * delta.x  +   cos_th * delta.y );
+  output.theta = pose.theta + delta.theta;
+  output.theta = std::fmod(output.theta + M_PI, 2 * M_PI) - M_PI;
+
+  return output;
+}
+
+/**
+ * \brief Compose two 2D poses additively.
+ *
+ * This corresponds to Pose_end = Pose_init (+) Delta
+ */
+common::Pose2DWithCovariance compose(const common::Pose2DWithCovariance& pose, const common::Pose2DWithCovariance& delta) {
+
+    common::Pose2DWithCovariance output;
+    output.pose = compose(pose.pose, delta.pose);
+
+    return output;
+}
+
+/**
+ * \brief Compute pose increment or Delta.
+ *
+ * This corresponds to Delta = Pose_end (-) Pose_init
+ */
+geometry_msgs::Pose2D between(const geometry_msgs::Pose2D& pose_1, const geometry_msgs::Pose2D& pose_2) {
+    geometry_msgs::Pose2D output;
+  double cos_th = cos( pose_1.theta );
+  double sin_th = sin( pose_1.theta );
+
+  // Help: composition is:
+  //    delta_xy = R(pose1.th).transposed * (pose2_xy - pose1_xy); with R(th) = [cos(th) -sin(th); sin(th) cos(th)]
+  //    delta_th = pose2_th - pose1.th;
+  double dx = pose_2.x - pose_1.x;
+  double dy = pose_2.y - pose_1.y;
+  output.x = (  cos_th * dx  + sin_th * dy );
+  output.y = ( -sin_th * dx  + cos_th * dy );
+  output.theta = pose_2.theta - pose_1.theta;
+  output.theta = std::fmod(output.theta + M_PI, 2 * M_PI) - M_PI;
 
   return output;
 }
@@ -136,32 +172,22 @@ common::Pose2DWithCovariance compose(common::Pose2DWithCovariance pose, common::
  *
  * This corresponds to Delta = Pose_end (-) Pose_init
  */
-common::Pose2DWithCovariance between(common::Pose2DWithCovariance pose_1, common::Pose2DWithCovariance pose_2) {
-  common::Pose2DWithCovariance output;
-  double cos_th = cos( pose_1.pose.theta );
-  double sin_th = sin( pose_1.pose.theta );
+common::Pose2DWithCovariance between(const common::Pose2DWithCovariance& pose_1, const common::Pose2DWithCovariance& pose_2) {
 
-  // Help: composition is:
-  //    delta_xy = R(pose1.th).transposed * (pose2_xy - pose1_xy); with R(th) = [cos(th) -sin(th); sin(th) cos(th)]
-  //    delta_th = pose2_th - pose1.th;
-  double dx = pose_2.pose.x - pose_1.pose.x;
-  double dy = pose_2.pose.y - pose_1.pose.y;
-  output.pose.x = (  cos_th * dx  + sin_th * dy );
-  output.pose.y = ( -sin_th * dx  + cos_th * dy );
-  output.pose.theta = pose_2.pose.theta - pose_1.pose.theta;
-  output.pose.theta = std::fmod(output.pose.theta + M_PI, 2 * M_PI) - M_PI;
+  common::Pose2DWithCovariance output;
+  output.pose = between(pose_1.pose, pose_2.pose);
 
   return output;
 }
 
-Eigen::MatrixXd covariance_to_eigen(common::Factor::_delta_type::_covariance_type cov) {
+Eigen::MatrixXd covariance_to_eigen(const common::Factor::_delta_type::_covariance_type& cov) {
 
   Eigen::Matrix3d Q = Eigen::Matrix3d(&(cov[0]));
 
   return Q;
 }
 
-common::Pose2DWithCovariance eigen_to_covariance(common::Pose2DWithCovariance pose, Eigen::MatrixXd Q) {
+common::Pose2DWithCovariance eigen_to_covariance(const common::Pose2DWithCovariance& pose, const Eigen::MatrixXd& Q) {
   for(int i = 0; i < Q.rows(); i++) {
     for(int j = 0; j < Q.cols(); j++) {
       pose.covariance[( i * Q.rows() ) + j] = Q(i, j);
