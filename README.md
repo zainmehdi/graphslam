@@ -15,20 +15,20 @@ For this, we will do the following:
 
 1. Start the robot and perform an initial run, collecting a couple of rosbags: one easy, one more challenging. We will explain the main commands and visual rendering that we will use in the experiments.
 
-2. Use the rosbags in you own laptops to try to build nice maps. For this, you need to tune the main algorithm parameters. See their effect on the relevant evaluation subjects above.
+2. Use the rosbags in your own laptops to try to build nice maps. For this, you need to tune the main algorithm parameters. See their effect on the relevant evaluation subjects above.
 
   These parameters are:
   
     - In scanner.cpp:
-      - const double fitness_keyframe_threshold
-      - const double fitness_loop_threshold
-      - const double distance_threshold
-      - const double rotation_threshold
-      - const unsigned int loop_closure_skip
-      - const double sigma_xy, sigma_th
+      - const double fitness_keyframe_threshold // fitness limit to make a keyframe
+      - const double fitness_loop_threshold     // maximum fitness to accept a loop closure
+      - const double distance_threshold         // maximum distance between keyframes
+      - const double rotation_threshold         // maximum rotation between keyframes
+      - const unsigned int loop_closure_skip    // number of keyframes after the last loop closure before we start looking for neew loop closures
+      - const double sigma_xy, sigma_th         // standard deviations for the factors
       
     - in graph.cpp:
-      - int keyframes_to_skip_in_loop_closing
+      - int keyframes_to_skip_in_loop_closing   // number of keyframes to skip behind the last keyframe to look for the closest keyframe
 
 3. Once you are satisfied with your parameter set, you will be able to try them on the real robot.
 
@@ -38,7 +38,7 @@ For this, we will do the following:
 
     $ git clone git@github.com:davidswords/GraphSLAM.git
 
-Edit ~/.bashrc: add line `source ~/[...]/graphSLAM/devel/setup.sh`
+Edit ~/.bashrc: add line `source ~/[...]/GraphSLAM/devel/setup.sh`
     
 
 ## Execution
@@ -71,11 +71,11 @@ In terminal 2:
  
     $ roscore
     
-In terminal 3:
-
-    $ rosbag play subset.bag
-
 In terminal 1:
 
     $ roslaunch common robot-graphSLAM.launch
+
+In terminal 3:
+
+    $ rosbag play [rosbag file name].bag
 
