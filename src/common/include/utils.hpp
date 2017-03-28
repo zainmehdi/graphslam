@@ -187,7 +187,7 @@ Eigen::MatrixXd covariance_to_eigen(const common::Factor::_delta_type::_covarian
   return Q;
 }
 
-common::Pose2DWithCovariance eigen_to_covariance(const common::Pose2DWithCovariance& pose, const Eigen::MatrixXd& Q) {
+common::Pose2DWithCovariance eigen_to_covariance(common::Pose2DWithCovariance& pose, const Eigen::MatrixXd& Q) {
   for(int i = 0; i < Q.rows(); i++) {
     for(int j = 0; j < Q.cols(); j++) {
       pose.covariance[( i * Q.rows() ) + j] = Q(i, j);
