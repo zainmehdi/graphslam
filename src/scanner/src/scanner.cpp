@@ -13,6 +13,7 @@ double fitness_keyframe_threshold, fitness_loop_threshold, distance_threshold, r
 // Uncertainty model constants
 double k_disp_disp, k_rot_disp, k_rot_rot;
 double sigma_xy, sigma_th;
+
 // #### TUNING CONSTANTS END
 
 ros::Publisher registration_pub;
@@ -145,7 +146,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
 
         // Do align
         double start = ros::Time::now().toSec();
-        gicp.setMaxCorrespondenceDistance(0.5); // 1m for close range
+        gicp.setMaxCorrespondenceDistance(0.5); // fine for close range
         Alignement alignement_last = gicp_register(input_pointcloud, keyframe_last_pointcloud, carry_transform);
         double end = ros::Time::now().toSec();
 
@@ -190,7 +191,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
 
                     // Do align
                     start = ros::Time::now().toSec();
-                    gicp.setMaxCorrespondenceDistance(1); // 5m for loop closure
+                    gicp.setMaxCorrespondenceDistance(1.0); // coarse for loop closure
                     Alignement alignement_loop = gicp_register(keyframe_closest_pointcloud, keyframe_last_pointcloud, loop_transform);
                     end = ros::Time::now().toSec();
 

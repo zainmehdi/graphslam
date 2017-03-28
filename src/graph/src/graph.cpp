@@ -6,6 +6,7 @@
 // #### TUNING CONSTANTS START
 int keyframes_to_skip_in_loop_closing;
 double sigma_xy_prior, sigma_th_prior;
+
 // #### TUNING CONSTANTS END
 
 //// OK WE START HERE ////
