@@ -4,15 +4,15 @@
 
 // #### TUNING CONSTANTS START
 // Thresholds for voting for keyframe:
-const double fitness_keyframe_threshold = 1.5; // [adimensional] TODO migrate to rosparams
-const double fitness_loop_threshold = 3; // [adimensional] TODO migrate to rosparams
-const double distance_threshold = 1; // [m] TODO migrate to rosparams
-const double rotation_threshold = 1; // [rad] TODO migrate to rosparams
-const unsigned int loop_closure_skip = 5;
+int gicp_maximum_iterations;
+double gicp_maximum_correspondence_distance, gicp_transformation_epsilon, gicp_euclidean_fitness_epsilon;
+
+int loop_closure_skip;
+double fitness_keyframe_threshold, fitness_loop_threshold, distance_threshold, rotation_threshold;
 
 // Uncertainty model constants
-const double k_disp_disp = 0.001, k_rot_disp = 0.001, k_rot_rot = 0.001; // TODO migrate to rosparams
-const double sigma_xy = 0.2, sigma_th = 0.1; // TODO migrate to rosparams
+double k_disp_disp, k_rot_disp, k_rot_rot;
+double sigma_xy, sigma_th;
 // #### TUNING CONSTANTS END
 
 ros::Publisher registration_pub;
@@ -232,9 +232,8 @@ int main(int argc, char** argv) {
   ros::NodeHandle n;
 
   ros::Subscriber scanner_sub = n.subscribe("/base_scan", 1, scanner_callback);
-//  keyframe_IDs = 0;
 
-  delta_pub = n.advertise<geometry_msgs::Pose2D>("scanner/delta", 1);
+  delta_pub = n.advertise<geometry_msgs::Pose2D>("/scanner/delta", 1);
   
   registration_pub  = n.advertise<common::Registration>("/scanner/registration", 1);
   pointcloud_debug_pub = n.advertise<sensor_msgs::PointCloud2>("/scanner/debug_pointcloud", 1);
@@ -246,11 +245,123 @@ int main(int argc, char** argv) {
   gicp.setUseReciprocalCorrespondences(true);
   //  gicp.setCorrespondenceRandomness();
   //  gicp.setRotationEpsilon();
-  gicp.setMaximumIterations(50); // ICP example 50
-  gicp.setMaxCorrespondenceDistance(1); // ICP example 0.05
-  gicp.setTransformationEpsilon(1e-8); // ICP example 1e-8
-  gicp.setEuclideanFitnessEpsilon(0.1); // ICP example 1
 
+  // ### rosparam get gicp_maximum_iterations ###
+  if(ros::param::get("/scanner/gicp_maximum_iterations", gicp_maximum_iterations)) {
+    gicp.setMaximumIterations(gicp_maximum_iterations);
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/gicp_maximum_iterations = %d", gicp_maximum_iterations);
+  } else {
+    gicp_maximum_iterations = 50; // ICP example 50
+    gicp.setMaximumIterations(gicp_maximum_iterations);
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/gicp_maximum_iterations = %d", gicp_maximum_iterations);
+  }
+
+  // ### rosparam get gicp_maximum_correspondence_distance ###
+  if(ros::param::get("/scanner/gicp_maximum_correspondence_distance", gicp_maximum_correspondence_distance)) {
+    gicp.setMaxCorrespondenceDistance(gicp_maximum_correspondence_distance);
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/gicp_maximum_correspondence_distance = %f",
+	     gicp_maximum_correspondence_distance);
+  } else {
+    gicp_maximum_correspondence_distance = 0.05; // ICP example 0.05
+    gicp.setMaxCorrespondenceDistance(gicp_maximum_correspondence_distance);
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/gicp_maximum_correspondence_distance = %f",
+	     gicp_maximum_correspondence_distance);
+  }
+
+  gicp_transformation_epsilon = 1e-8; // ICP example 1e-8
+  gicp.setTransformationEpsilon(gicp_transformation_epsilon); 
+
+  // ### rosparam get gicp_euclidean_fitness_epsilon ###
+  if(ros::param::get("/scanner/gicp_euclidean_fitness_epsilon", gicp_euclidean_fitness_epsilon)) {
+    gicp.setEuclideanFitnessEpsilon(gicp_euclidean_fitness_epsilon);
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/gicp_euclidean_fitness_epsilon = %f", gicp_euclidean_fitness_epsilon);
+  } else {
+    gicp_euclidean_fitness_epsilon = 1.0; // ICP example 1
+    gicp.setEuclideanFitnessEpsilon(gicp_euclidean_fitness_epsilon); 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/gicp_euclidean_fitness_epsilon = %f",
+	     gicp_euclidean_fitness_epsilon);
+  }
+
+  // ### rosparam get fitness_keyframe_threshold ###
+  if(ros::param::get("/scanner/fitness_keyframe_threshold", fitness_keyframe_threshold)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/fitness_keyframe_threshold = %f", fitness_keyframe_threshold);
+  } else {
+    fitness_keyframe_threshold = 1.5; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/fitness_keyframe_threshold = %f",
+	     fitness_keyframe_threshold);
+  }
+
+  // ### rosparam get fitness_loop_threshold ###
+  if(ros::param::get("/scanner/fitness_loop_threshold", fitness_loop_threshold)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/fitness_loop_threshold = %f", fitness_loop_threshold);
+  } else {
+    fitness_loop_threshold = 4.5; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/fitness_loop_threshold = %f", fitness_loop_threshold);
+  }
+
+  // ### rosparam get distance_threshold ###
+  if(ros::param::get("/scanner/distance_threshold", distance_threshold)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/distance_threshold = %f", distance_threshold);
+  } else {
+    distance_threshold = 1.0; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/distance_threshold = %f", distance_threshold);
+  }
+
+  // ### rosparam get rotation_threshold ###
+  if(ros::param::get("/scanner/rotation_threshold", rotation_threshold)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/rotation_threshold = %f", rotation_threshold);
+  } else {
+    rotation_threshold = 1.0; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/rotation_threshold = %f", rotation_threshold);
+  }
+
+  // ### rosparam get loop_closure_skip ###
+  if(ros::param::get("/scanner/loop_closure_skip", loop_closure_skip)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/loop_closure_skip = %d", loop_closure_skip);
+  } else {
+    loop_closure_skip = 4; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/loop_closure_skip = %d", loop_closure_skip);
+  }
+
+  // ### rosparam get k_disp_disp ###
+  if(ros::param::get("/scanner/k_disp_disp", k_disp_disp)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/k_disp_disp = %f", k_disp_disp);
+  } else {
+    k_disp_disp = 0.001; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/k_disp_disp = %f", k_disp_disp);
+  }
+
+  // ### rosparam get k_rot_disp ###
+  if(ros::param::get("/scanner/k_rot_disp", k_rot_disp)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/k_rot_disp = %f", k_rot_disp);
+  } else {
+    k_rot_disp = 0.001; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/k_rot_disp = %f", k_rot_disp);
+  }
+
+  // ### rosparam get k_rot_rot ###
+  if(ros::param::get("/scanner/k_rot_rot", k_rot_rot)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/k_rot_rot = %f", k_rot_rot);
+  } else {
+    k_rot_rot = 0.001; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/k_rot_rot = %f", k_rot_rot);
+  }
+
+  // ### rosparam get sigma_xy ###
+  if(ros::param::get("/scanner/sigma_xy", sigma_xy)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/sigma_xy = %f", sigma_xy);
+  } else {
+    sigma_xy = 0.002; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/sigma_xy = %f", sigma_xy);
+  }
+
+  // ### rosparam get sigma_th ###
+  if(ros::param::get("/scanner/sigma_th", sigma_th)) {
+    ROS_INFO("ROSPARAM: [LOADED] /scanner/sigma_th = %f", sigma_th);
+  } else {
+    sigma_th = 0.001; 
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /scanner/sigma_th = %f", sigma_th);
+  }
 
   // Spy ICP convergence criteria:
   ROS_INFO("ICP: max iter sim transf: %d", gicp.getConvergeCriteria()->getMaximumIterationsSimilarTransforms());

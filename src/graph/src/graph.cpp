@@ -4,9 +4,8 @@
 #include <common/Graph.h>
 
 // #### TUNING CONSTANTS START
-double sigma_xy_prior = 0.1; // TODO migrate to rosparams
-double sigma_th_prior = 0.1; // TODO migrate to rosparams
-int keyframes_to_skip_in_loop_closing = 4; // TODO migrate to rosparams
+int keyframes_to_skip_in_loop_closing;
+double sigma_xy_prior, sigma_th_prior;
 // #### TUNING CONSTANTS END
 
 //// OK WE START HERE ////
@@ -274,6 +273,34 @@ int main(int argc, char** argv) {
   
   // Init ID factory
   keyframe_IDs = 0;
+
+  // ### rosparam get sigma_xy_prior ###
+  if(ros::param::has("/graph/sigma_xy_prior")) {
+    ros::param::get("/graph/sigma_xy_prior", sigma_xy_prior);
+    ROS_INFO("ROSPARAM: [LOADED] /graph/sigma_xy_prior = %f", sigma_xy_prior);
+  } else {
+    sigma_xy_prior = 0.1;
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /graph/sigma_xy_prior = %f", sigma_xy_prior);
+  }
+
+  // ### rosparam get sigma_th_prior ###
+  if(ros::param::has("/graph/sigma_th_prior")) {
+    ros::param::get("/graph/sigma_th_prior", sigma_th_prior);
+    ROS_INFO("ROSPARAM: [LOADED] /graph/sigma_th_prior = %f", sigma_th_prior);
+  } else {
+    sigma_th_prior = 0.1;
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /graph/sigma_th_prior = %f", sigma_th_prior);
+  }
+
+  // ### rosparam get keyframe_to_skip_in_loop_closing ###
+  if(ros::param::has("/graph/keyframes_to_skip_in_loop_closing")) {
+    ros::param::get("/graph/keyframes_to_skip_in_loop_closing", keyframes_to_skip_in_loop_closing);
+    ROS_INFO("ROSPARAM: [LOADED] /graph/keyframes_to_skip_in_loop_closing = %d", keyframes_to_skip_in_loop_closing);
+  } else {
+    keyframes_to_skip_in_loop_closing = 5;
+    ROS_WARN("ROSPARAM: [NOT LOADED][DEFAULT SET] /graph/keyframes_to_skip_in_loop_closing = %d",
+	     keyframes_to_skip_in_loop_closing);
+  }
 
   graph_pub = n.advertise<common::Graph>("/graph/graph", 1);
   ros::Subscriber registration_sub = n.subscribe("/scanner/registration", 1, registration_callback);
