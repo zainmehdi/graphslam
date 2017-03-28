@@ -5,10 +5,10 @@
 // #### TUNING CONSTANTS START
 // Thresholds for voting for keyframe:
 const double fitness_keyframe_threshold = 1.5; // [adimensional] TODO migrate to rosparams
-const double fitness_loop_threshold = 3; // [adimensional] TODO migrate to rosparams
+const double fitness_loop_threshold = 5; // [adimensional] TODO migrate to rosparams
 const double distance_threshold = 1; // [m] TODO migrate to rosparams
 const double rotation_threshold = 1; // [rad] TODO migrate to rosparams
-const unsigned int loop_closure_skip = 5;
+const unsigned int loop_closure_skip = 5; // TODO migrate to rosparams
 
 // Uncertainty model constants
 const double sigma_xy = 0.2, sigma_th = 0.1; // TODO migrate to rosparams
@@ -146,7 +146,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
 
         // Do align
         double start = ros::Time::now().toSec();
-        gicp.setMaxCorrespondenceDistance(0.5); // 1m for close range
+        gicp.setMaxCorrespondenceDistance(0.5); // fine for close range
         Alignement alignement_last = gicp_register(input_pointcloud, keyframe_last_pointcloud, carry_transform);
         double end = ros::Time::now().toSec();
 
@@ -191,7 +191,7 @@ void scanner_callback(const sensor_msgs::LaserScan& input)
 
                     // Do align
                     start = ros::Time::now().toSec();
-                    gicp.setMaxCorrespondenceDistance(1); // 5m for loop closure
+                    gicp.setMaxCorrespondenceDistance(1.0); // coarse for loop closure
                     Alignement alignement_loop = gicp_register(keyframe_closest_pointcloud, keyframe_last_pointcloud, loop_transform);
                     end = ros::Time::now().toSec();
 
